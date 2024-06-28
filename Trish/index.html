@@ -6,8 +6,9 @@
             :root {
                 --text-color: #00cb1e;
                 --background-color: #002109;
+                --profile-picture: url(https://picture-service.secondlife.com/2a8bf4b8-bfc4-4f6b-05cb-5390a8c5af62/256x192.jpg);
             }
-            
+
             body {
                 background: var(--background-color);
                 color: var(--text-color);
@@ -52,7 +53,7 @@
 
             .fade {
                 box-shadow: 0 0 8px 8px #002109 inset;
-                background-image: url(https://picture-service.secondlife.com/2a8bf4b8-bfc4-4f6b-05cb-5390a8c5af62/256x192.jpg);
+                background-image: var(--profile-picture);
                 width: 256px;
                 height: 192px;
             }
@@ -62,7 +63,6 @@
                 background-color: var(--text-color);
                 width: 0.6em;
                 height: 1em;
-
                 animation: blink 1s infinite;
             }
 
