@@ -4,18 +4,52 @@
         <title>Trish</title>
         <style>
             body {
-                background: #1c1c1c;
+                background: #002109;
                 color: #00cb1e
+            }
+            pre {
+                margin-top: 3em;
+                margin-left: -7em;
+                font-size: large;
+                font-weight: bold;
+                display: inline;
+            }
+
+            .crt::before {
+                content: " ";
+                display: block;
+                position: absolute;
+                top: 0;
+                left: 0;
+                bottom: 0;
+                right: 0;
+                background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+                z-index: 2;
+                background-size: 100% 2px, 3px 100%;
+                pointer-events: none;
+            }
+            .container {
+                margin: 1em;
+                display: flex;
+            }
+            .fade {
+                box-shadow: 0 0 8px 8px #002109 inset;
+                background-image: url(https://picture-service.secondlife.com/2a8bf4b8-bfc4-4f6b-05cb-5390a8c5af62/256x192.jpg);
+                width: 256px;
+                height: 192px;
             }
         </style>
     </head>
-    <body>
-        <pre>
-            Trainer: -Confidential-
-            ID: D0A3C6
-            Serial number: PsyDS 25-5332
-            Mare name: Unassigned
-            Stable: Unassigned
-        </pre>
+    <body class="crt">
+        <div class="container">
+            <div class="fade"></div>
+            <pre>
+                Trainer:        -Confidential-
+                ID:             D0A3C6
+                SN:             PsyDS 25-5332
+                Mare name:      Unassigned
+                Stable:         Unassigned
+            </pre>
+        </div>
     </body>
 </html>
