@@ -21,3 +21,4 @@ generateIndex() {
 generateIndex personas
 generateIndex scripts
 generateIndex db
+generateIndex trish
