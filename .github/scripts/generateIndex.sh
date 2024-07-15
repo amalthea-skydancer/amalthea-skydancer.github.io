@@ -1,4 +1,4 @@
-#!/usr/bin/env sh
+#!/usr/bin/env bash
 
 # function to generate index.html for the given directory
 generateIndex() {
@@ -12,7 +12,7 @@ generateIndex() {
         else
             echo "Processing $file"
             echo -n "${file##*/} " >> "$1/index.html"
-            echo "$(stat -c %s "$file")"  >> "$1/index.html"
+            stat -c %s "$file"  >> "$1/index.html"
         fi
     done
 }
@@ -21,4 +21,3 @@ generateIndex() {
 generateIndex personas
 generateIndex scripts
 generateIndex db
-generateIndex trish
