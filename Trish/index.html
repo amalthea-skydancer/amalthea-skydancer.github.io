@@ -1,109 +1,137 @@
 <!DOCTYPE html>
-<html>
-    <head>
-        <title>Trish</title>
-        <style>
-            :root {
-                --text-color: #00cb1e;
-                --background-color: #002109;
-                --profile-picture: url(https://picture-service.secondlife.com/2a8bf4b8-bfc4-4f6b-05cb-5390a8c5af62/256x192.jpg);
-            }
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Personalia: Trish</title>
+    <style>
+        :root {
+            --text-color: #00cb1e;
+            --background-color: #002109;
+            --profile-picture: url(https://picture-service.secondlife.com/2a8bf4b8-bfc4-4f6b-05cb-5390a8c5af62/256x192.jpg);
+            --font-family: 'Courier New', monospace;
+        }
+        body {
+            font-family: var(--font-family);
+            display: flex;
+            height: 100vh;
+            margin: 0;
+            background-color: var(--background-color);
+        }
+        .crt::before {
+            content: " ";
+            display: block;
+            position: absolute;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            right: 0;
+            background: linear-gradient(
+                rgba(18, 16, 16, 0) 50%, 
+                rgba(0, 0, 0, 0.25) 50%
+            ), 
+            linear-gradient(90deg, 
+                rgba(255, 0, 0, 0.06), 
+                rgba(0, 255, 0, 0.02), 
+                rgba(0, 0, 255, 0.06)
+            );
+            z-index: 2;
+            background-size: 100% 2px, 3px 100%;
+            pointer-events: none;
+        }
+        .fade {
+            box-shadow: 0 0 8px 8px #002109 inset;
+            background-image: var(--profile-picture);
+            width: 256px;
+            height: 192px;
+        }
+        #personalia {
+            padding: 20px;
+            position: relative;
+            color: var(--text-color);
+        }
+        .field {
+            margin-bottom: 0.15em;
+            position: relative;
+            font-weight: 900;
+        }
+        .fn {
+            font-weight: 800;
+        }
+        #cursor {
+            display: inline-block;
+            width: 0.6em;
+            height: 1.2em;
+            background-color: var(--text-color);
+            position: absolute;
+            animation: blink 0.7s infinite;
+            vertical-align: middle;
+            margin-left: 0.2em;
+        }
+        @keyframes blink {
+            0% { opacity: 0; }
+            50% { opacity: 1; }
+            100% { opacity: 0; }
+        }
+    </style>
+</head>
+<body class="crt">
+    <div class="fade"></div>
+    <div id="personalia"></div>
 
-            body {
-                background: var(--background-color);
-                color: var(--text-color);
-                font-family: monospace;
-                padding: 1em;
-            }
-            
-            .personalia {
-                /* white-space: pre; */
-                font-size: large;
-                font-weight: 900;
-                margin-left: 2em;
-                margin-top: 1em
-            }
+    <script type="module">
+        const personalia = {
+            "Trainer": "th3a",
+            "ID": "D0A3C6",
+            "S/N": "PsyDS 25-5332",
+            "Mare name": "Unassigned",
+            "Stable": "Unassigned",
+        };
 
-            .crt::before {
-                content: " ";
-                display: block;
-                position: absolute;
-                top: 0;
-                left: 0;
-                bottom: 0;
-                right: 0;
-                background: linear-gradient(
-                    rgba(18, 16, 16, 0) 50%, 
-                    rgba(0, 0, 0, 0.25) 50%
-                ), 
-                linear-gradient(90deg, 
-                    rgba(255, 0, 0, 0.06), 
-                    rgba(0, 255, 0, 0.02), 
-                    rgba(0, 0, 255, 0.06)
-                );
-                z-index: 2;
-                background-size: 100% 2px, 3px 100%;
-                pointer-events: none;
-            }
+        const personaliaElement = document.getElementById('personalia');
+        let cursor;
 
-            .container {
-                margin: 1em;
-                display: flex;
-            }
+        function createField(key) {
+            const field = document.createElement('div');
+            field.className = 'field';
+            field.innerHTML = `<strong class="fn">${key}:</strong> <span class="value"></span>`;
+            personaliaElement.appendChild(field);
+            return field.querySelector('.value');
+        }
 
-            .fade {
-                box-shadow: 0 0 8px 8px #002109 inset;
-                background-image: var(--profile-picture);
-                width: 256px;
-                height: 192px;
-            }
+        function createCursor() {
+            cursor = document.createElement('span');
+            cursor.id = 'cursor';
+            personaliaElement.appendChild(cursor);
+        }
 
-            .cursor {
-                display: inline-block;
-                background-color: var(--text-color);
-                width: 0.6em;
-                height: 1em;
-                animation: blink 1s infinite;
-            }
+        function positionCursor(element) {
+            const rect = element.getBoundingClientRect();
+            const parentRect = personaliaElement.getBoundingClientRect();
+            cursor.style.top = `${rect.top - parentRect.top}px`;
+            cursor.style.left = `${rect.left - parentRect.left + element.offsetWidth}px`;
+        }
 
-            @keyframes blink {
-                0%, 100% {
-                    background-color: transparent;
-                }
-                50% {
-                    background-color: var(--text-color);
-                }
+        async function typeText(element, text) {
+            positionCursor(element);
+
+            for (let char of text) {
+                element.textContent += char;
+                positionCursor(element);
+                await new Promise(resolve => setTimeout(resolve, 50 + Math.random() * 250));
             }
-        </style>
-    </head>
-    <body class="crt">
-        <h1>Personalia: Trish</h1>
-        <div class="container">
-            <div class="fade"></div>
-            <div class="personalia">
-                <table>
-                    <tr>
-                        <td>Trainer:</td>
-                        <td>th3a</td>
-                    </tr>
-                    <tr>
-                        <td>ID:</td>
-                        <td>D0A3C6</td>
-                    </tr>
-                    <tr>
-                        <td>SN:</td>
-                        <td>PsyDS 25-5332</td>
-                    </tr>
-                    <tr>
-                        <td>Mare name:&nbsp;</td>
-                        <td>Unassigned</td>
-                    </tr>
-                    <tr>
-                        <td>Stable:</td>
-                        <td>Unassigned <span class="cursor"></span></td>
-                    </tr>
-                </table>
-            </div>
-        </div>
-    </body>
+        }
+
+        async function fillPersonalia() {
+            createCursor();
+            for (let [key, value] of Object.entries(personalia)) {
+                const valueElement = createField(key);
+                await typeText(valueElement, value);
+                await new Promise(resolve => setTimeout(resolve, 500 + Math.random() * 1000)); // Pause between fields
+            }
+        }
+
+        fillPersonalia();
+    </script>
+</body>
 </html>
