@@ -21,3 +21,5 @@ generateIndex() {
 generateIndex personas
 generateIndex scripts
 generateIndex db
+generateIndex private/thea
+generateIndex private/trish
