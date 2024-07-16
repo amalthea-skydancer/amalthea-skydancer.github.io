@@ -131,11 +131,18 @@
             }
 
             function getRandomDelay(command) {
-                if (command === 'left' || command === 'right') {
-                    // Random delay between 1 second and MAX_DELAY_SECONDS
-                    return Math.floor(Math.random() * (MAX_DELAY_SECONDS * 1000 - 1000 + 1) + 1000);
-                }
-                return 1000; // Default 1 second delay for other commands
+                // Generate a random number between 0 and 1
+                const rand = Math.random();
+                
+                // Apply exponential distribution
+                // Adjust the base (currently 0.1) to control the curve steepness
+                // Smaller base values will make the curve steeper (more short delays)
+                const exponentialValue = Math.pow(0.1, rand);
+                
+                // Scale to fit within 1 second to MAX_DELAY_SECONDS
+                const scaledDelay = 1000 + (MAX_DELAY_SECONDS - 1) * 1000 * (1 - exponentialValue);
+                
+                return Math.floor(scaledDelay);s
             }
 
             function updateCommandHistory(command) {
