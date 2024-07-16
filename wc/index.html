@@ -224,20 +224,33 @@
             document.getElementById("max-delay-input").value = MAX_DELAY_SECONDS;
         </script>
         <style>
+            :root {
+                --text-color: #00cb1e;
+                --text-alt-color: #008d15;
+                --background-color: #002109;
+                --background-alt-color: #001207;
+            }
             body {
                 font-family: Arial, sans-serif;
                 display: flex;
                 flex-direction: column;
                 align-items: center;
                 padding: 20px;
+                background-color: var(--background-color);
+                color: var(--text-color);
             }
             button {
                 font-size: 18px;
                 padding: 10px 20px;
                 margin: 10px;
+                background-color: var(--background-alt-color);
+                color: var(--text-alt-color);
+                border: none;
+                border-radius: 3px;
+                cursor: pointer;
             }
             #command-history {
-                border: 1px solid #ccc;
+                border: 1px solid var(--text-alt-color);
                 padding: 10px;
                 margin-top: 20px;
                 width: 200px;
@@ -249,7 +262,7 @@
             #command-history div {
                 margin: 5px 0;
                 padding: 5px;
-                background-color: #f0f0f0;
+                background-color: var(--background-alt-color);
                 border-radius: 3px;
             }
             #countdown-container {
@@ -265,10 +278,35 @@
                 width: 60px;
                 margin-left: 10px;
                 font-size: 16px;
+                background-color: var(--background-alt-color);
+                color: var(--text-alt-color);
+                border: 1px solid var(--text-alt-color);
+                border-radius: 3px;
+            }
+            .crt::before {
+                content: " ";
+                display: block;
+                position: absolute;
+                top: 0;
+                left: 0;
+                bottom: 0;
+                right: 0;
+                background: linear-gradient(
+                    rgba(18, 16, 16, 0) 50%, 
+                    rgba(0, 0, 0, 0.25) 50%
+                ), 
+                linear-gradient(90deg,
+                    rgba(255, 0, 0, 0.06),
+                    rgba(0, 255, 0, 0.02),
+                    rgba(0, 0, 255, 0.06)
+                );
+                z-index: 2;
+                background-size: 100% 2px, 3px 100%;
+                pointer-events: none;
             }
         </style>
     </head>
-    <body>
+    <body class="crt">
         <button id="start">Start</button>
         <button id="stop">Stop</button>
         <div id="max-delay-container">
