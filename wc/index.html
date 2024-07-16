@@ -5,6 +5,23 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <script type="module">
+            // Configuration
+            const commandWeights = {
+                start: 10,
+                left: 35,
+                right: 35,
+                stop: 20
+            };
+
+            const MAX_DELAY_SECONDS = 120; // Maximum delay in seconds (2 minutes)
+
+            const commands = {
+                start: ['pre', 'crack', 'post'],
+                left: ['pre', 'crack', 'crack', 'crack', 'post'],
+                right: ['pre', 'crack', 'crack', 'crack', 'crack', 'post'],
+                stop: ['pre', 'crack', 'crack', 'post']
+            };
+
             class AudioPlayer {
                 constructor() {
                     this.context = new (window.AudioContext || window.webkitAudioContext)();
@@ -12,6 +29,8 @@
                     this.buffers = {};
                     this.loaded = false;
                     this.primed = false;
+                    this.queue = [];
+                    this.isPlaying = false;
                 }
 
                 async loadSounds() {
@@ -23,9 +42,13 @@
                     };
 
                     const fetchPromises = Object.entries(urls).map(async ([name, url]) => {
-                        const response = await fetch(url);
-                        const arrayBuffer = await response.arrayBuffer();
-                        this.sounds[name] = await this.context.decodeAudioData(arrayBuffer);
+                        try {
+                            const response = await fetch(url);
+                            const arrayBuffer = await response.arrayBuffer();
+                            this.sounds[name] = await this.context.decodeAudioData(arrayBuffer);
+                        } catch (error) {
+                            console.error(`Error loading sound ${name}:`, error);
+                        }
                     });
 
                     await Promise.all(fetchPromises);
@@ -42,14 +65,40 @@
                     this.primed = true;
                 }
 
-                async play(name, delay = 0) {
-                    if (!this.loaded) await this.loadSounds();
-                    if (!this.primed) this.prime();
+                queueSound(name, delay = 0) {
+                    this.queue.push({ name, time: this.context.currentTime + delay });
+                    if (!this.isPlaying) {
+                        this.playNextInQueue();
+                    }
+                }
 
-                    const source = this.context.createBufferSource();
-                    source.buffer = this.sounds[name];
-                    source.connect(this.context.destination);
-                    source.start(this.context.currentTime + delay);
+                async playNextInQueue() {
+                    if (this.queue.length === 0) {
+                        this.isPlaying = false;
+                        return;
+                    }
+
+                    this.isPlaying = true;
+                    const { name, time } = this.queue.shift();
+
+                    try {
+                        if (!this.loaded) await this.loadSounds();
+                        if (!this.primed) this.prime();
+
+                        const source = this.context.createBufferSource();
+                        source.buffer = this.sounds[name];
+                        source.connect(this.context.destination);
+                        
+                        const startTime = Math.max(time, this.context.currentTime);
+                        source.start(startTime);
+
+                        source.onended = () => {
+                            this.playNextInQueue();
+                        };
+                    } catch (error) {
+                        console.error(`Error playing sound ${name}:`, error);
+                        this.playNextInQueue();
+                    }
                 }
             }
 
@@ -60,34 +109,19 @@
             // Preload sounds
             await player.loadSounds();
 
-            function playSequence(sequence) {
-                player.prime(); // Ensure audio context is activated
+            function queueSequence(sequence) {
                 let delay = 0;
                 for (const sound of sequence) {
-                    player.play(sound, delay);
+                    player.queueSound(sound, delay);
                     delay += (sound === 'pre' ? preLen : crackLen);
                 }
-                return delay; // Return the total duration of the sequence
+                return delay;
             }
-
-            const commands = {
-                start: ['pre', 'crack', 'post'],
-                left: ['pre', 'crack', 'crack', 'crack', 'post'],
-                right: ['pre', 'crack', 'crack', 'crack', 'crack', 'post'],
-                stop: ['pre', 'crack', 'crack', 'post']
-            };
-
-            // Weighted probabilities for command selection
-            const commandWeights = {
-                start: 10,
-                left: 35,
-                right: 35,
-                stop: 20
-            };
 
             let isPlaying = false;
             let nextCommandTimeout;
             let commandHistory = [];
+            let countdownInterval;
 
             function getWeightedRandomCommand() {
                 const totalWeight = Object.values(commandWeights).reduce((sum, weight) => sum + weight, 0);
@@ -101,8 +135,8 @@
 
             function getRandomDelay(command) {
                 if (command === 'left' || command === 'right') {
-                    // Random delay between 1 second and 2 minutes (in milliseconds)
-                    return Math.floor(Math.random() * (120000 - 1000 + 1) + 1000);
+                    // Random delay between 1 second and MAX_DELAY_SECONDS
+                    return Math.floor(Math.random() * (MAX_DELAY_SECONDS * 1000 - 1000 + 1) + 1000);
                 }
                 return 1000; // Default 1 second delay for other commands
             }
@@ -116,6 +150,25 @@
                 historyElement.innerHTML = commandHistory.map(cmd => `<div>${cmd}</div>`).join('');
             }
 
+            function updateCountdown(remainingTime) {
+                const countdownElement = document.getElementById('countdown');
+                countdownElement.textContent = (remainingTime / 1000).toFixed(1);
+            }
+
+            function startCountdown(duration) {
+                let remainingTime = duration;
+                updateCountdown(remainingTime);
+
+                clearInterval(countdownInterval);
+                countdownInterval = setInterval(() => {
+                    remainingTime -= 100; // Update every 100ms for smoother countdown
+                    if (remainingTime <= 0) {
+                        clearInterval(countdownInterval);
+                        remainingTime = 0;
+                    }
+                    updateCountdown(remainingTime);
+                }, 100);
+            }
 
             function playRandomCommand(forceStart = false) {
                 if (!isPlaying) return;
@@ -125,10 +178,12 @@
 
                 console.log(`Playing: ${randomCommand}`);
                 updateCommandHistory(randomCommand);
-                const duration = playSequence(sequence);
+                const duration = queueSequence(sequence);
 
                 const delay = getRandomDelay(randomCommand);
                 console.log(`Next command in ${delay / 1000} seconds`);
+
+                startCountdown(duration * 1000 + delay);
 
                 // Schedule the next command
                 nextCommandTimeout = setTimeout(() => playRandomCommand(false), duration * 1000 + delay);
@@ -144,10 +199,12 @@
             function stopSequence() {
                 isPlaying = false;
                 clearTimeout(nextCommandTimeout);
-
+                clearInterval(countdownInterval);
+                updateCountdown(0);
+                
                 // Play the stop command
                 const stopSequence = commands['stop'];
-                playSequence(stopSequence);
+                queueSequence(stopSequence);
                 updateCommandHistory('stop');
             }
 
@@ -183,11 +240,18 @@
                 background-color: #f0f0f0;
                 border-radius: 3px;
             }
+            #countdown-container {
+                font-size: 24px;
+                margin-top: 20px;
+            }
         </style>
     </head>
     <body>
         <button id="start">Start</button>
         <button id="stop">Stop</button>
+        <div id="countdown-container">
+            Next command in: <span id="countdown">0.0</span> seconds
+        </div>
         <div id="command-history"></div>
     </body>
 </html>
