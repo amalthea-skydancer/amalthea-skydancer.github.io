@@ -14,8 +14,10 @@
             };
 
             let MAX_DELAY_SECONDS = 30; // Maximum delay in seconds (1 minute)
+            let START_DELAY_SECONDS = 5; // Default start delay in seconds
+            let START_DELAY_RANDOMNESS = 0; // Default randomness factor (0-100%)
 
-            const WEIGHT_INCREASE = 13; // Amount to increase start/stop weight after a stop command
+            const WEIGHT_INCREASE = 15; // Amount to increase start/stop weight after a stop command
 
             const commands = {
                 start: ['pre', 'crack', 'post'],
@@ -185,12 +187,24 @@
                 nextCommandTimeout = setTimeout(() => playRandomCommand(false), duration * 1000 + delay);
             }
 
+            function getStartDelay() {
+                const baseDelay = START_DELAY_SECONDS * 1000;
+                const randomFactor = START_DELAY_RANDOMNESS / 100;
+                const randomVariation = Math.random() * baseDelay * randomFactor * 2 - baseDelay * randomFactor;
+                return Math.max(0, baseDelay + randomVariation);
+            }
+
             function startSequence() {
                 if (isPlaying) return;
                 isPlaying = true;
                 commandHistory = [];
                 lastCommand = null;
-                playRandomCommand(true); // Force start command on first play
+                
+                const startDelay = getStartDelay();
+                console.log(`Starting sequence in ${startDelay / 1000} seconds`);
+                startCountdown(startDelay);
+                
+                setTimeout(() => playRandomCommand(true), startDelay);
             }
 
             function stopSequence() {
@@ -217,10 +231,38 @@
                 }
             }
 
+            function updateStartDelay() {
+                const input = document.getElementById('start-delay-input');
+                const newValue = parseInt(input.value, 10);
+                if (!isNaN(newValue) && newValue >= 0) {
+                    START_DELAY_SECONDS = newValue;
+                    console.log(`Start delay updated to ${START_DELAY_SECONDS} seconds`);
+                } else {
+                    console.error('Invalid start delay value');
+                    input.value = START_DELAY_SECONDS; // Reset to current value
+                }
+            }
+
+            function updateStartDelayRandomness() {
+                const input = document.getElementById('start-delay-randomness-input');
+                const newValue = parseInt(input.value, 10);
+                if (!isNaN(newValue) && newValue >= 0 && newValue <= 100) {
+                    START_DELAY_RANDOMNESS = newValue;
+                    console.log(`Start delay randomness updated to ${START_DELAY_RANDOMNESS}%`);
+                } else {
+                    console.error('Invalid start delay randomness value');
+                    input.value = START_DELAY_RANDOMNESS; // Reset to current value
+                }
+            }
+
             document.getElementById("start").addEventListener("click", startSequence);
             document.getElementById("stop").addEventListener("click", stopSequence);
             document.getElementById("max-delay-input").addEventListener("change", updateMaxDelay);
+            document.getElementById("start-delay-input").addEventListener("change", updateStartDelay);
+            document.getElementById("start-delay-randomness-input").addEventListener("change", updateStartDelayRandomness);
             document.getElementById("max-delay-input").value = MAX_DELAY_SECONDS;
+            document.getElementById("start-delay-input").value = START_DELAY_SECONDS;
+            document.getElementById("start-delay-randomness-input").value = START_DELAY_RANDOMNESS;
         </script>
         <style>
             :root {
@@ -268,14 +310,20 @@
                 font-size: 24px;
                 margin-top: 20px;
             }
-            #max-delay-container {
-                margin-top: 20px;
+            .input-container {
+                margin-top: 10px;
                 display: flex;
                 align-items: center;
+                width: 100%;
+                max-width: 400px;
             }
-            #max-delay-input {
+            .input-container label {
+                flex: 1;
+                margin-right: 10px;
+            }
+            input[type="number"] {
                 width: 60px;
-                margin-left: 10px;
+                padding: 5px;
                 font-size: 16px;
                 background-color: var(--background-alt-color);
                 color: var(--text-alt-color);
@@ -308,9 +356,17 @@
     <body class="crt">
         <button id="start">Start</button>
         <button id="stop">Stop</button>
-        <div id="max-delay-container">
+        <div class="input-container">
             <label for="max-delay-input">Max Delay (seconds):</label>
             <input type="number" id="max-delay-input" min="1" step="1">
+        </div>
+        <div class="input-container">
+            <label for="start-delay-input">Start Delay (seconds):</label>
+            <input type="number" id="start-delay-input" min="0" step="1">
+        </div>
+        <div class="input-container">
+            <label for="start-delay-randomness-input">Start Delay Randomness (%):</label>
+            <input type="number" id="start-delay-randomness-input" min="0" max="100" step="1">
         </div>
         <div id="countdown-container">
             Next command in: <span id="countdown">0.0</span> seconds
