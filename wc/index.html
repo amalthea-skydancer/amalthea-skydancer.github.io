@@ -5,44 +5,189 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <script type="module">
-            const pre = new Audio("/wc/pre.wav");
-            const preLen = 346;
-            const crack = new Audio("/wc/crack.wav");
-            const crackLen = 358;
-            const post = new Audio("/wc/post.wav");
-            document.getElementById("start").addEventListener("click", () => {
-                pre.play();
-                setTimeout(() => crack.play(), preLen);
-                setTimeout(() => post.play(), preLen + crackLen);
-            });
-            document.getElementById("left").addEventListener("click", () => {
-                pre.play();
-                setTimeout(() => crack.play(), preLen);
-                setTimeout(() => crack.play(), preLen + crackLen);
-                setTimeout(() => crack.play(), preLen + crackLen + crackLen);
-                setTimeout(() => post.play(), preLen + crackLen + crackLen + crackLen);
-            });
-            document.getElementById("right").addEventListener("click", () => {
-                pre.play();
-                setTimeout(() => crack.play(), preLen);
-                setTimeout(() => crack.play(), preLen + crackLen);
-                setTimeout(() => crack.play(), preLen + crackLen + crackLen);
-                setTimeout(() => crack.play(), preLen + crackLen + crackLen + crackLen);
-                setTimeout(() => post.play(), preLen + crackLen + crackLen + crackLen + crackLen);
-            });
-            document.getElementById("stop").addEventListener("click", () => {
-                pre.play();
-                setTimeout(() => crack.play(), preLen);
-                setTimeout(() => crack.play(), preLen + crackLen);
-                setTimeout(() => post.play(), preLen + crackLen + crackLen);
-            });
+            class AudioPlayer {
+                constructor() {
+                    this.context = new (window.AudioContext || window.webkitAudioContext)();
+                    this.sounds = {};
+                    this.buffers = {};
+                    this.loaded = false;
+                    this.primed = false;
+                }
+
+                async loadSounds() {
+                    if (this.loaded) return;
+                    const urls = {
+                        'pre': '/wc/pre.wav',
+                        'crack': '/wc/crack.wav',
+                        'post': '/wc/post.wav'
+                    };
+
+                    const fetchPromises = Object.entries(urls).map(async ([name, url]) => {
+                        const response = await fetch(url);
+                        const arrayBuffer = await response.arrayBuffer();
+                        this.sounds[name] = await this.context.decodeAudioData(arrayBuffer);
+                    });
+
+                    await Promise.all(fetchPromises);
+                    this.loaded = true;
+                }
+
+                prime() {
+                    if (this.primed) return;
+                    const silentBuffer = this.context.createBuffer(1, 1, 22050);
+                    const source = this.context.createBufferSource();
+                    source.buffer = silentBuffer;
+                    source.connect(this.context.destination);
+                    source.start();
+                    this.primed = true;
+                }
+
+                async play(name, delay = 0) {
+                    if (!this.loaded) await this.loadSounds();
+                    if (!this.primed) this.prime();
+
+                    const source = this.context.createBufferSource();
+                    source.buffer = this.sounds[name];
+                    source.connect(this.context.destination);
+                    source.start(this.context.currentTime + delay);
+                }
+            }
+
+            const player = new AudioPlayer();
+            const preLen = 0.346; // 346ms in seconds
+            const crackLen = 0.358; // 358ms in seconds
+
+            // Preload sounds
+            await player.loadSounds();
+
+            function playSequence(sequence) {
+                player.prime(); // Ensure audio context is activated
+                let delay = 0;
+                for (const sound of sequence) {
+                    player.play(sound, delay);
+                    delay += (sound === 'pre' ? preLen : crackLen);
+                }
+                return delay; // Return the total duration of the sequence
+            }
+
+            const commands = {
+                start: ['pre', 'crack', 'post'],
+                left: ['pre', 'crack', 'crack', 'crack', 'post'],
+                right: ['pre', 'crack', 'crack', 'crack', 'crack', 'post'],
+                stop: ['pre', 'crack', 'crack', 'post']
+            };
+
+            // Weighted probabilities for command selection
+            const commandWeights = {
+                start: 10,
+                left: 35,
+                right: 35,
+                stop: 20
+            };
+
+            let isPlaying = false;
+            let nextCommandTimeout;
+            let commandHistory = [];
+
+            function getWeightedRandomCommand() {
+                const totalWeight = Object.values(commandWeights).reduce((sum, weight) => sum + weight, 0);
+                let randomNum = Math.random() * totalWeight;
+
+                for (const [command, weight] of Object.entries(commandWeights)) {
+                    if (randomNum < weight) return command;
+                    randomNum -= weight;
+                }
+            }
+
+            function getRandomDelay(command) {
+                if (command === 'left' || command === 'right') {
+                    // Random delay between 1 second and 2 minutes (in milliseconds)
+                    return Math.floor(Math.random() * (120000 - 1000 + 1) + 1000);
+                }
+                return 1000; // Default 1 second delay for other commands
+            }
+
+            function updateCommandHistory(command) {
+                commandHistory.unshift(command);
+                if (commandHistory.length > 5) {
+                    commandHistory.pop();
+                }
+                const historyElement = document.getElementById('command-history');
+                historyElement.innerHTML = commandHistory.map(cmd => `<div>${cmd}</div>`).join('');
+            }
+
+
+            function playRandomCommand(forceStart = false) {
+                if (!isPlaying) return;
+
+                const randomCommand = forceStart ? 'start' : getWeightedRandomCommand();
+                const sequence = commands[randomCommand];
+
+                console.log(`Playing: ${randomCommand}`);
+                updateCommandHistory(randomCommand);
+                const duration = playSequence(sequence);
+
+                const delay = getRandomDelay(randomCommand);
+                console.log(`Next command in ${delay / 1000} seconds`);
+
+                // Schedule the next command
+                nextCommandTimeout = setTimeout(() => playRandomCommand(false), duration * 1000 + delay);
+            }
+
+            function startSequence() {
+                if (isPlaying) return;
+                isPlaying = true;
+                commandHistory = [];
+                playRandomCommand(true); // Force start command on first play
+            }
+
+            function stopSequence() {
+                isPlaying = false;
+                clearTimeout(nextCommandTimeout);
+
+                // Play the stop command
+                const stopSequence = commands['stop'];
+                playSequence(stopSequence);
+                updateCommandHistory('stop');
+            }
+
+            document.getElementById("start").addEventListener("click", startSequence);
+            document.getElementById("stop").addEventListener("click", stopSequence);
         </script>
-        <style></style>
+        <style>
+            body {
+                font-family: Arial, sans-serif;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                padding: 20px;
+            }
+            button {
+                font-size: 18px;
+                padding: 10px 20px;
+                margin: 10px;
+            }
+            #command-history {
+                border: 1px solid #ccc;
+                padding: 10px;
+                margin-top: 20px;
+                width: 200px;
+                height: 150px;
+                overflow-y: auto;
+                display: flex;
+                flex-direction: column-reverse;
+            }
+            #command-history div {
+                margin: 5px 0;
+                padding: 5px;
+                background-color: #f0f0f0;
+                border-radius: 3px;
+            }
+        </style>
     </head>
     <body>
         <button id="start">Start</button>
-        <button id="left">Left</button>
-        <button id="right">Right</button>
         <button id="stop">Stop</button>
+        <div id="command-history"></div>
     </body>
 </html>
