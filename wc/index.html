@@ -1,9 +1,48 @@
 <!DOCTYPE html>
 <html>
     <head>
-
+        <title>Whip circle</title>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <script type="module">
+            const pre = new Audio("/wc/pre.wav");
+            const preLen = 346;
+            const crack = new Audio("/wc/crack.wav");
+            const crackLen = 358;
+            const post = new Audio("/wc/post.wav");
+            document.getElementById("start").addEventListener("click", () => {
+                pre.play();
+                setTimeout(() => crack.play(), preLen);
+                setTimeout(() => post.play(), preLen + crackLen);
+            });
+            document.getElementById("left").addEventListener("click", () => {
+                pre.play();
+                setTimeout(() => crack.play(), preLen);
+                setTimeout(() => crack.play(), preLen + crackLen);
+                setTimeout(() => crack.play(), preLen + crackLen + crackLen);
+                setTimeout(() => post.play(), preLen + crackLen + crackLen + crackLen);
+            });
+            document.getElementById("right").addEventListener("click", () => {
+                pre.play();
+                setTimeout(() => crack.play(), preLen);
+                setTimeout(() => crack.play(), preLen + crackLen);
+                setTimeout(() => crack.play(), preLen + crackLen + crackLen);
+                setTimeout(() => crack.play(), preLen + crackLen + crackLen + crackLen);
+                setTimeout(() => post.play(), preLen + crackLen + crackLen + crackLen + crackLen);
+            });
+            document.getElementById("stop").addEventListener("click", () => {
+                pre.play();
+                setTimeout(() => crack.play(), preLen);
+                setTimeout(() => crack.play(), preLen + crackLen);
+                setTimeout(() => post.play(), preLen + crackLen + crackLen);
+            });
+        </script>
+        <style></style>
     </head>
     <body>
-        
+        <button id="start">Start</button>
+        <button id="left">Left</button>
+        <button id="right">Right</button>
+        <button id="stop">Stop</button>
     </body>
 </html>
