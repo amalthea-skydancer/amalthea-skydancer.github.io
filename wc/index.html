@@ -6,14 +6,16 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <script type="module">
             // Configuration
-            const commandWeights = {
+            const baseCommandWeights = {
                 start: 10,
                 left: 35,
                 right: 35,
                 stop: 20
             };
 
-            const MAX_DELAY_SECONDS = 120; // Maximum delay in seconds (2 minutes)
+            let MAX_DELAY_SECONDS = 30; // Maximum delay in seconds (1 minute)
+
+            const WEIGHT_INCREASE = 10; // Amount to increase start/stop weight after a stop command
 
             const commands = {
                 start: ['pre', 'crack', 'post'],
@@ -21,6 +23,8 @@
                 right: ['pre', 'crack', 'crack', 'crack', 'crack', 'post'],
                 stop: ['pre', 'crack', 'crack', 'post']
             };
+
+            let lastCommand = null;
 
             class AudioPlayer {
                 constructor() {
@@ -109,10 +113,17 @@
             let countdownInterval;
 
             function getWeightedRandomCommand() {
-                const totalWeight = Object.values(commandWeights).reduce((sum, weight) => sum + weight, 0);
+                const currentWeights = { ...baseCommandWeights };
+                
+                if (lastCommand === 'stop') {
+                    currentWeights.start += WEIGHT_INCREASE;
+                    currentWeights.stop += WEIGHT_INCREASE;
+                }
+
+                const totalWeight = Object.values(currentWeights).reduce((sum, weight) => sum + weight, 0);
                 let randomNum = Math.random() * totalWeight;
                 
-                for (const [command, weight] of Object.entries(commandWeights)) {
+                for (const [command, weight] of Object.entries(currentWeights)) {
                     if (randomNum < weight) return command;
                     randomNum -= weight;
                 }
@@ -133,6 +144,7 @@
                 }
                 const historyElement = document.getElementById('command-history');
                 historyElement.innerHTML = commandHistory.map(cmd => `<div>${cmd}</div>`).join('');
+                lastCommand = command;
             }
 
             function updateCountdown(remainingTime) {
@@ -178,6 +190,7 @@
                 if (isPlaying) return;
                 isPlaying = true;
                 commandHistory = [];
+                lastCommand = null;
                 playRandomCommand(true); // Force start command on first play
             }
 
@@ -193,8 +206,22 @@
                 updateCommandHistory('stop');
             }
 
+            function updateMaxDelay() {
+                const input = document.getElementById('max-delay-input');
+                const newValue = parseInt(input.value, 10);
+                if (!isNaN(newValue) && newValue > 0) {
+                    MAX_DELAY_SECONDS = newValue;
+                    console.log(`Max delay updated to ${MAX_DELAY_SECONDS} seconds`);
+                } else {
+                    console.error('Invalid max delay value');
+                    input.value = MAX_DELAY_SECONDS; // Reset to current value
+                }
+            }
+
             document.getElementById("start").addEventListener("click", startSequence);
             document.getElementById("stop").addEventListener("click", stopSequence);
+            document.getElementById("max-delay-input").addEventListener("change", updateMaxDelay);
+            document.getElementById("max-delay-input").value = MAX_DELAY_SECONDS;
         </script>
         <style>
             body {
@@ -229,11 +256,25 @@
                 font-size: 24px;
                 margin-top: 20px;
             }
+            #max-delay-container {
+                margin-top: 20px;
+                display: flex;
+                align-items: center;
+            }
+            #max-delay-input {
+                width: 60px;
+                margin-left: 10px;
+                font-size: 16px;
+            }
         </style>
     </head>
     <body>
         <button id="start">Start</button>
         <button id="stop">Stop</button>
+        <div id="max-delay-container">
+            <label for="max-delay-input">Max Delay (seconds):</label>
+            <input type="number" id="max-delay-input" min="1" step="1">
+        </div>
         <div id="countdown-container">
             Next command in: <span id="countdown">0.0</span> seconds
         </div>
