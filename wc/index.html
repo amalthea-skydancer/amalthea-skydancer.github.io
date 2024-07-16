@@ -117,7 +117,6 @@
                 
                 if (lastCommand === 'stop') {
                     currentWeights.start += WEIGHT_INCREASE;
-                    currentWeights.stop += WEIGHT_INCREASE;
                 }
 
                 const totalWeight = Object.values(currentWeights).reduce((sum, weight) => sum + weight, 0);
