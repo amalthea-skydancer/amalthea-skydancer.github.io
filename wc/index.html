@@ -25,10 +25,8 @@
             class AudioPlayer {
                 constructor() {
                     this.context = new (window.AudioContext || window.webkitAudioContext)();
-                    this.sounds = {};
                     this.buffers = {};
                     this.loaded = false;
-                    this.primed = false;
                     this.queue = [];
                     this.isPlaying = false;
                 }
@@ -45,7 +43,7 @@
                         try {
                             const response = await fetch(url);
                             const arrayBuffer = await response.arrayBuffer();
-                            this.sounds[name] = await this.context.decodeAudioData(arrayBuffer);
+                            this.buffers[name] = await this.context.decodeAudioData(arrayBuffer);
                         } catch (error) {
                             console.error(`Error loading sound ${name}:`, error);
                         }
@@ -55,16 +53,6 @@
                     this.loaded = true;
                 }
 
-                prime() {
-                    if (this.primed) return;
-                    const silentBuffer = this.context.createBuffer(1, 1, 22050);
-                    const source = this.context.createBufferSource();
-                    source.buffer = silentBuffer;
-                    source.connect(this.context.destination);
-                    source.start();
-                    this.primed = true;
-                }
-
                 queueSound(name, delay = 0) {
                     this.queue.push({ name, time: this.context.currentTime + delay });
                     if (!this.isPlaying) {
@@ -72,7 +60,7 @@
                     }
                 }
 
-                async playNextInQueue() {
+                playNextInQueue() {
                     if (this.queue.length === 0) {
                         this.isPlaying = false;
                         return;
@@ -82,11 +70,8 @@
                     const { name, time } = this.queue.shift();
 
                     try {
-                        if (!this.loaded) await this.loadSounds();
-                        if (!this.primed) this.prime();
-
                         const source = this.context.createBufferSource();
-                        source.buffer = this.sounds[name];
+                        source.buffer = this.buffers[name];
                         source.connect(this.context.destination);
                         
                         const startTime = Math.max(time, this.context.currentTime);
@@ -126,7 +111,7 @@
             function getWeightedRandomCommand() {
                 const totalWeight = Object.values(commandWeights).reduce((sum, weight) => sum + weight, 0);
                 let randomNum = Math.random() * totalWeight;
-
+                
                 for (const [command, weight] of Object.entries(commandWeights)) {
                     if (randomNum < weight) return command;
                     randomNum -= weight;
