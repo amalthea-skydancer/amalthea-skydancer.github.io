@@ -86,38 +86,64 @@
             "S/N": "XSU 80-9275",
             "Mare name": "Sterope",
             "Stable": "Tall Tails",
+            "Trained in": [
+                "Whip circle",
+                "Carting",
+                "Modern Flower",
+                "Classical Flower",
+                "Silent Dressage",
+                "Traverse",
+                "Slalom",
+                "Steeples",
+            ]
         };
 
         const personaliaElement = document.getElementById('personalia');
         let cursor;
 
-        function createField(key) {
+        function createField(key, value) {
             const field = document.createElement('div');
             field.className = 'field';
-            field.innerHTML = `<strong class="fn">${key}:</strong> <span class="value"></span>`;
-            personaliaElement.appendChild(field);
-            return field.querySelector('.value');
+            field.innerHTML = `<strong class="fn">${key}:</strong> `;
+            
+            if (Array.isArray(value)) {
+                const list = document.createElement('ul');
+                list.style.listStyleType = 'none';
+                list.style.padding = '0';
+                list.style.margin = '0';
+                list.style.marginLeft = '1em';
+                field.appendChild(list);
+                return { field, valueElement: list };
+            } else {
+                const valueSpan = document.createElement('span');
+                valueSpan.className = 'value';
+                field.appendChild(valueSpan);
+                return { field, valueElement: valueSpan };
+            }
         }
 
         function createCursor() {
             cursor = document.createElement('span');
             cursor.id = 'cursor';
             personaliaElement.appendChild(cursor);
+            // We don't need to set position here anymore
         }
 
         function positionCursor(element) {
-            const rect = element.getBoundingClientRect();
-            const parentRect = personaliaElement.getBoundingClientRect();
-            cursor.style.top = `${rect.top - parentRect.top}px`;
-            cursor.style.left = `${rect.left - parentRect.left + element.offsetWidth}px`;
+            // Remove the cursor from its current position
+            if (cursor.parentNode) {
+                cursor.parentNode.removeChild(cursor);
+            }
+            // Insert the cursor after the element
+            element.parentNode.insertBefore(cursor, element.nextSibling);
         }
 
         async function typeText(element, text) {
-            positionCursor(element);
-
+            let textNode = document.createTextNode('');
+            element.appendChild(textNode);
             for (let char of text) {
-                element.textContent += char;
-                positionCursor(element);
+                textNode.nodeValue += char;
+                positionCursor(textNode);
                 await new Promise(resolve => setTimeout(resolve, 50 + Math.random() * 250));
             }
         }
@@ -125,8 +151,20 @@
         async function fillPersonalia() {
             createCursor();
             for (let [key, value] of Object.entries(personalia)) {
-                const valueElement = createField(key);
-                await typeText(valueElement, value);
+                const { field, valueElement } = createField(key, value);
+                personaliaElement.appendChild(field);
+
+                if (Array.isArray(value)) {
+                    for (let item of value) {
+                        const listItem = document.createElement('li');
+                        valueElement.appendChild(listItem);
+                        await typeText(listItem, item);
+                        await new Promise(resolve => setTimeout(resolve, 200 + Math.random() * 500));
+                    }
+                } else {
+                    await typeText(valueElement, value);
+                }
+
                 await new Promise(resolve => setTimeout(resolve, 500 + Math.random() * 1000)); // Pause between fields
             }
         }
