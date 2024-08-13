@@ -1,5 +1,5 @@
 persona set marker d189e492-93ad-3f2c-698d-d37239d5e741 d189e492-93ad-3f2c-698d-d37239d5e741 d189e492-93ad-3f2c-698d-d37239d5e741
-persona set path $rlv/persona/mare
+persona set path $rlv/persona/mareamp
 persona set action {}
 
 persona set action.yes /me stomps once
@@ -24,7 +24,7 @@ power location off
 policy bolts on
 policy release off
 
-id name Mare Unit th3a
+id name Mare Unit Sterope
 
 db set input.censored /me whinnies
 
