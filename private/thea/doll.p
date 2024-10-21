@@ -1,5 +1,4 @@
-persona set marker d189e492-93ad-3f2c-698d-d37239d5e741 d189e492-93ad-3f2c-698d-d37239d5e741 d189e492-93ad-3f2c-698d-d37239d5e741
-
+persona set marker b2348479-1e4b-fdf0-2011-4750ca026b39 b2348479-1e4b-fdf0-2011-4750ca026b39 b2348479-1e4b-fdf0-2011-4750ca026b39
 persona set action {}
 
 power voice off
