@@ -1,33 +1,33 @@
 persona set marker d189e492-93ad-3f2c-698d-d37239d5e741 d189e492-93ad-3f2c-698d-d37239d5e741 d189e492-93ad-3f2c-698d-d37239d5e741
-persona set path $rlv/persona/mareamp
+
 persona set action {}
 
-persona set action.yes /me stomps once
-persona set action.no /me stomps twice
-persona set action.hi /me curtsies
-persona set action.bye /me curtsies
-persona set action.nicker /me plays nicker.aiff
-persona set action.snort /me plays snort.mp3
-persona set action.whinny /me plays whinny.wav
-persona set action.lol /me plays nicker.wma
-persona set action.fuck /me plays snort.midi
+persona set action.yes say /me stomps once
+persona set action.no say /me stomps twice
+persona set action.hi say /me curtsies
+persona set action.bye say /me curtsies
+persona set action.nicker say /me plays nicker.aiff
+persona set action.snort say /me plays snort.mp3
+persona set action.whinny say /me plays whinny.wav
+persona set action.lol say /me plays nicker.wma
+persona set action.fuck say /me plays snort.midi
 
-power mind off
-power inventory off
+
 power flight off
-power touch-self off
-power far-cam off
 power reach off
 power amplifier off
-power location off
+power mind off
 
+policy group name The Void Empress
+policy group role Mare
+policy group on
 policy bolts on
-policy release off
+policy release on
 
-id name Mare Unit Sterope
+id name Sterope
+db set id.prefix XSU Mare Unit
+id regen
 
 db set input.censored /me whinnies
 
 security ban $self
-
-say $me is ready to work
