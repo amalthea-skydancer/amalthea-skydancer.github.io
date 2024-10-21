@@ -19,4 +19,4 @@ id regen
 
 db set input.censored /me is unable to speak
 
-security ban $self
+security user $self
