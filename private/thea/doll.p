@@ -13,7 +13,7 @@ policy group on
 policy bolts on
 policy release on
 
-id name doll
+id name dolly
 db set id.prefix XSU
 id regen
 
