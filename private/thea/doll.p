@@ -18,3 +18,5 @@ db set id.prefix XSU
 id regen
 
 db set input.censored /me is unable to speak
+
+security ban $self
