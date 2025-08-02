@@ -44,7 +44,8 @@ jobs:
         run: uv sync
 
       - name: Generate Achievements
-        run: uv run .github/scripts/generateAchievements.py
+        working-directory: .github/scripts
+        run: uv run generateAchievements.py
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
