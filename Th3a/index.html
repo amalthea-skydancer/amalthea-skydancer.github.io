@@ -151,7 +151,7 @@
             for (let char of text) {
                 textNode.nodeValue += char;
                 positionCursor(textNode);
-                await new Promise(resolve => setTimeout(resolve, 50 + Math.random() * 250));
+                await new Promise(resolve => setTimeout(resolve, 50 + Math.random() * 150));
             }
         }
 
@@ -167,13 +167,13 @@
                         const listItem = document.createElement('li');
                         valueElement.appendChild(listItem);
                         await typeText(listItem, item);
-                        await new Promise(resolve => setTimeout(resolve, 200 + Math.random() * 500));
+                        await new Promise(resolve => setTimeout(resolve, 200 + Math.random() * 300));
                     }
                 } else {
                     await typeText(valueElement, value);
                 }
 
-                await new Promise(resolve => setTimeout(resolve, 500 + Math.random() * 1000)); // Pause between fields
+                await new Promise(resolve => setTimeout(resolve, 500 + Math.random() * 750)); // Pause between fields
             }
         }
 
