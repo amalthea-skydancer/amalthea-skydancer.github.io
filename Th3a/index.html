@@ -99,13 +99,10 @@
             "Achievements": [], // Populated by a request to achievements.json
         };
 
-        function getAchievements() {
-            fetch('achievements.json')
-                .then(response => response.json())
-                .then(data => {
-                    personalia.Achievements = data;
-                })
-                .catch(error => console.error('Error fetching achievements:', error));
+        async function getAchievements() {
+            const response = await fetch('achievements.json');
+            const data = await response.json();
+            personalia.Achievements = data;
         }
 
         const personaliaElement = document.getElementById('personalia');
