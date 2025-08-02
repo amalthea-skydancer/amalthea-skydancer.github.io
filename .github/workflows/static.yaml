@@ -33,6 +33,15 @@ jobs:
         uses: actions/checkout@v4
       - name: Generate Directory Listings
         run: .github/scripts/generateIndex.sh
+
+      - name: Install the latest version of uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          activate-environment: true
+
+      - name: Generate Achievements
+        run: uv run .github/scripts/generateAchievements.py
+
       - name: Setup Pages
         uses: actions/configure-pages@v5
       - name: Upload artifact

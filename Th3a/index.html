@@ -96,21 +96,17 @@
                 "Slalom",
                 "Steeples",
             ],
-            "Achievements": [
-                "Around the Atoll",
-                "Don't Step on the Flowers!",
-                "Bouquet",
-                "Boom!",
-                "Shark Train",
-                "Garbage Day",
-                "Pikeseer",
-                "Winter Holiday",
-                "You Spin Me Round (Like A Record)",
-                "Visit Seogyeoshire",
-                "Witchcraft",
-                "Week of Madness 2024",
-            ],
+            "Achievements": [], // Populated by a request to achievements.json
         };
+
+        function getAchievements() {
+            fetch('achievements.json')
+                .then(response => response.json())
+                .then(data => {
+                    personalia.Achievements = data;
+                })
+                .catch(error => console.error('Error fetching achievements:', error));
+        }
 
         const personaliaElement = document.getElementById('personalia');
         let cursor;
@@ -163,6 +159,7 @@
         }
 
         async function fillPersonalia() {
+            await getAchievements();
             createCursor();
             for (let [key, value] of Object.entries(personalia)) {
                 const { field, valueElement } = createField(key, value);
