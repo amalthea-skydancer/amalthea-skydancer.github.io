@@ -6,7 +6,7 @@
       name="viewport"
       content="width=device-width, initial-scale=1, shrink-to-fit=no"
     />
-    <title>Achievements for i.doll</title>
+    <title>Achievements</title>
     <style>
       :root {
         color-scheme: light dark;
@@ -170,15 +170,23 @@
         gap: 10px;
       }
 
-      button {
+      button,
+      input {
         appearance: none;
         border: 1px solid rgba(255, 255, 255, 0.1);
         background: linear-gradient(180deg, #1a1d29, #141824);
         color: #e6e6e6;
         padding: 8px 12px;
         border-radius: 10px;
-        cursor: pointer;
         font-size: 14px;
+      }
+
+      input {
+        width: 200px;
+      }
+
+      button {
+        cursor: pointer;
         transition: transform 0.05s ease, border-color 0.2s ease,
           background 0.2s ease;
       }
@@ -198,6 +206,19 @@
 
       a.link:hover {
         text-decoration: underline;
+      }
+
+      .row {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        margin-top: 10px;
+        flex-wrap: wrap;
+      }
+
+      .label {
+        font-size: 12px;
+        color: var(--muted);
       }
     </style>
   </head>
@@ -221,7 +242,17 @@
           </svg>
           <div>
             <h1 class="title">Achievements</h1>
-            <p class="sub">User: i.doll</p>
+            <p id="userSub" class="sub">User: i.doll</p>
+            <div class="row">
+              <span class="label">Change user:</span>
+              <input
+                id="nameInput"
+                type="text"
+                placeholder="Enter username (e.g., i.doll)"
+                aria-label="Username"
+              />
+              <button id="applyNameBtn" type="button">Apply</button>
+            </div>
           </div>
         </div>
 
@@ -250,6 +281,7 @@
               Refresh
             </button>
             <a
+              id="rawLink"
               class="link"
               href="https://tt-achievements.th3a.dev/?name=i.doll"
               target="_blank"
@@ -262,8 +294,8 @@
     </div>
 
     <script>
-      const ENDPOINT =
-        "https://tt-achievements.th3a.dev/?name=i.doll";
+      const DEFAULT_NAME = "i.doll";
+      const BASE_URL = "https://tt-achievements.th3a.dev/";
 
       const els = {
         status: document.getElementById("status"),
@@ -273,7 +305,43 @@
         grid: document.getElementById("grid"),
         summary: document.getElementById("summary"),
         refreshBtn: document.getElementById("refreshBtn"),
+        userSub: document.getElementById("userSub"),
+        rawLink: document.getElementById("rawLink"),
+        nameInput: document.getElementById("nameInput"),
+        applyNameBtn: document.getElementById("applyNameBtn"),
       };
+
+      function getNameFromLocation() {
+        const params = new URLSearchParams(window.location.search);
+        const name = (params.get("name") || "").trim();
+        return name || DEFAULT_NAME;
+      }
+
+      function setNameInLocation(name) {
+        const params = new URLSearchParams(window.location.search);
+        if (name && name !== DEFAULT_NAME) {
+          params.set("name", name);
+        } else {
+          params.delete("name");
+        }
+        const newUrl =
+          window.location.pathname +
+          (params.toString() ? `?${params.toString()}` : "") +
+          window.location.hash;
+        history.replaceState(null, "", newUrl);
+      }
+
+      function buildEndpoint(name) {
+        const url = new URL(BASE_URL);
+        url.searchParams.set("name", name);
+        return url.toString();
+      }
+
+      function updateHeader(name) {
+        els.userSub.textContent = `User: ${name}`;
+        els.nameInput.value = name;
+        els.rawLink.href = buildEndpoint(name);
+      }
 
       function show(el) {
         el.classList.remove("hidden");
@@ -321,7 +389,6 @@
 
           item.appendChild(icon);
           item.appendChild(label);
-
           item.title = `Achievement #${idx + 1}`;
           frag.appendChild(item);
         });
@@ -337,36 +404,33 @@
         }</span> achieved`;
       }
 
-      async function fetchAchievements({ signal } = {}) {
-        const res = await fetch(ENDPOINT, {
+      async function fetchAchievements(endpoint, { signal } = {}) {
+        const res = await fetch(endpoint, {
           method: "GET",
-          headers: {
-            Accept: "application/json",
-          },
+          headers: { Accept: "application/json" },
           cache: "no-store",
           signal,
         });
-
-        if (!res.ok) {
-          throw new Error(`HTTP ${res.status}`);
-        }
-
-        // The endpoint returns only a JSON array of strings.
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
         return res.json();
       }
 
       let currentController = null;
+      let currentName = getNameFromLocation();
 
-      async function load() {
-        if (currentController) {
-          currentController.abort();
-        }
+      async function load(name) {
+        if (currentController) currentController.abort();
         currentController = new AbortController();
 
+        currentName = (name || currentName || DEFAULT_NAME).trim() || DEFAULT_NAME;
+        setNameInLocation(currentName);
+        updateHeader(currentName);
         resetState();
 
+        const endpoint = buildEndpoint(currentName);
+
         try {
-          const data = await fetchAchievements({
+          const data = await fetchAchievements(endpoint, {
             signal: currentController.signal,
           });
           renderAchievements(data);
@@ -383,10 +447,29 @@
         }
       }
 
-      els.refreshBtn.addEventListener("click", load);
+      // Event listeners
+      els.refreshBtn.addEventListener("click", () => load(currentName));
+
+      els.applyNameBtn.addEventListener("click", () => {
+        const name = els.nameInput.value.trim();
+        load(name || DEFAULT_NAME);
+      });
+
+      els.nameInput.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+          const name = els.nameInput.value.trim();
+          load(name || DEFAULT_NAME);
+        }
+      });
+
+      window.addEventListener("popstate", () => {
+        const name = getNameFromLocation();
+        load(name);
+      });
 
       // Initial load
-      load();
+      updateHeader(currentName);
+      load(currentName);
     </script>
   </body>
 </html>
