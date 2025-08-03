@@ -34,18 +34,18 @@ jobs:
       - name: Generate Directory Listings
         run: .github/scripts/generateIndex.sh
 
-      - name: Install the latest version of uv
-        uses: astral-sh/setup-uv@v6
-        with:
-          activate-environment: true
+      # - name: Install the latest version of uv
+      #   uses: astral-sh/setup-uv@v6
+      #   with:
+      #     activate-environment: true
 
-      - name: Install dependencies
-        working-directory: .github/scripts
-        run: uv sync
+      # - name: Install dependencies
+      #   working-directory: .github/scripts
+      #   run: uv sync
 
-      - name: Generate Achievements
-        working-directory: .github/scripts
-        run: uv run generateAchievements.py
+      # - name: Generate Achievements
+      #   working-directory: .github/scripts
+      #   run: uv run generateAchievements.py
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
