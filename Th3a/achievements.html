@@ -145,7 +145,6 @@
         word-break: break-word;
       }
 
-      /* Highlighting styles when viewing all */
       .achv.owned {
         border-color: rgba(34, 197, 94, 0.6);
         box-shadow: 0 0 0 1px rgba(34, 197, 94, 0.25) inset;
@@ -265,13 +264,49 @@
         color: var(--muted);
       }
 
-      .toggle {
+      /* Button-style toggle */
+      .toggle-btn {
         display: inline-flex;
-        gap: 8px;
         align-items: center;
-        font-size: 13px;
-        color: var(--muted);
+        gap: 8px;
+        padding: 8px 12px;
+        border-radius: 10px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        background: linear-gradient(180deg, #1a1d29, #141824);
+        color: #e6e6e6;
+        cursor: pointer;
         user-select: none;
+        font-size: 14px;
+        transition: border-color 0.2s ease, background 0.2s ease,
+          transform 0.05s ease, box-shadow 0.2s ease;
+      }
+
+      .toggle-btn:hover {
+        border-color: rgba(79, 140, 255, 0.5);
+      }
+
+      .toggle-btn:active {
+        transform: translateY(1px);
+      }
+
+      .toggle-btn .dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 999px;
+        background: #6b7280; /* gray-500 */
+        box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.08) inset;
+      }
+
+      .toggle-btn.active {
+        border-color: rgba(34, 197, 94, 0.55);
+        box-shadow: 0 0 0 1px rgba(34, 197, 94, 0.25) inset;
+        background: linear-gradient(180deg, #1f2b22, #172219);
+        color: #d1fae5;
+      }
+
+      .toggle-btn.active .dot {
+        background: #22c55e;
+        box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.35) inset;
       }
     </style>
   </head>
@@ -305,10 +340,12 @@
                 aria-label="Username"
               />
               <button id="applyNameBtn" type="button">Apply</button>
-              <label class="toggle" title="Show full catalog">
-                <input id="allToggle" type="checkbox" />
+
+              <!-- Button-style toggle -->
+              <button id="allBtn" type="button" class="toggle-btn" aria-pressed="false" title="Show full catalog">
+                <span class="dot" aria-hidden="true"></span>
                 <span>View all achievements</span>
-              </label>
+              </button>
             </div>
           </div>
         </div>
@@ -366,7 +403,7 @@
         rawLink: document.getElementById("rawLink"),
         nameInput: document.getElementById("nameInput"),
         applyNameBtn: document.getElementById("applyNameBtn"),
-        allToggle: document.getElementById("allToggle"),
+        allBtn: document.getElementById("allBtn"),
       };
 
       function getNameFromLocation() {
@@ -407,13 +444,16 @@
       function updateHeader(name, viewingAll) {
         els.userSub.textContent = viewingAll ? "All achievements" : `User: ${name}`;
         els.nameInput.value = name;
-        els.allToggle.checked = !!viewingAll;
         els.rawLink.href = viewingAll
           ? buildAllEndpoint()
           : buildUserEndpoint(name);
         els.rawLink.textContent = viewingAll
           ? "View raw JSON (all)"
           : "View raw JSON";
+
+        // Update the button's visual/ARIA state
+        els.allBtn.classList.toggle("active", !!viewingAll);
+        els.allBtn.setAttribute("aria-pressed", viewingAll ? "true" : "false");
       }
 
       function show(el) {
@@ -579,8 +619,8 @@
         }
       });
 
-      els.allToggle.addEventListener("change", (e) => {
-        load({ name: currentName, all: e.target.checked });
+      els.allBtn.addEventListener("click", () => {
+        load({ name: currentName, all: !viewingAll });
       });
 
       window.addEventListener("popstate", () => {
