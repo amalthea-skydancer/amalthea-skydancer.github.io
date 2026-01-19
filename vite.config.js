@@ -12,6 +12,7 @@ export default defineConfig({
         mares: resolve(__dirname, 'mares.html'),
         wc: resolve(__dirname, 'wc/index.html'),
         th3a: resolve(__dirname, 'Th3a/index.html'),
+	tierlist: resolve(__dirname, 'tierlist.html'),
       },
     },
   },
