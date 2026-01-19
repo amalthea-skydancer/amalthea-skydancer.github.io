@@ -1,0 +1,2444 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tier List Maker</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=JetBrains+Mono:wght@400;600&family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --bg-primary: #0a0a0f;
+      --bg-secondary: #12121a;
+      --bg-tertiary: #1a1a25;
+      --text-primary: #e8e8f0;
+      --text-muted: #8888a0;
+
+      --tier-splus: #ff2d55;
+      --tier-s: #ff6b35;
+      --tier-a: #ffcc00;
+      --tier-b: #34c759;
+      --tier-c: #00d4aa;
+      --tier-d: #5ac8fa;
+      --tier-f: #af52de;
+
+      --alkali: #ff6b6b;
+      --alkaline: #ffa94d;
+      --transition: #74c0fc;
+      --post-transition: #69db7c;
+      --metalloid: #da77f2;
+      --nonmetal: #ffd43b;
+      --halogen: #38d9a9;
+      --noble: #748ffc;
+      --lanthanide: #f783ac;
+      --actinide: #ff8787;
+      --unknown: #868e96;
+      --custom: #a0a0a0;
+    }
+
+    body {
+      font-family: 'Outfit', sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background:
+        radial-gradient(ellipse at 20% 20%, rgba(255, 45, 85, 0.08) 0%, transparent 50%),
+        radial-gradient(ellipse at 80% 80%, rgba(90, 200, 250, 0.08) 0%, transparent 50%),
+        radial-gradient(ellipse at 50% 50%, rgba(175, 82, 222, 0.05) 0%, transparent 70%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .noise-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+      opacity: 0.03;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .app {
+      position: relative;
+      z-index: 2;
+      max-width: 1600px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 3rem;
+      position: relative;
+    }
+
+    .title-container {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      margin-bottom: 0.5rem;
+    }
+
+    h1 {
+      font-family: 'Orbitron', sans-serif;
+      font-size: clamp(1.8rem, 5vw, 3.5rem);
+      font-weight: 900;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      background: linear-gradient(135deg, #ff2d55 0%, #ff6b35 25%, #ffcc00 50%, #34c759 75%, #5ac8fa 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      text-shadow: 0 0 60px rgba(255, 45, 85, 0.5);
+      cursor: pointer;
+      border: 2px solid transparent;
+      padding: 0.2rem 0.5rem;
+      transition: border-color 0.2s ease;
+    }
+
+    h1:hover {
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    .title-input {
+      font-family: 'Orbitron', sans-serif;
+      font-size: clamp(1.8rem, 5vw, 3.5rem);
+      font-weight: 900;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      background: transparent;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      color: var(--text-primary);
+      text-align: center;
+      padding: 0.2rem 0.5rem;
+      outline: none;
+      width: 100%;
+      max-width: 800px;
+    }
+
+    .subtitle {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+    }
+
+    .controls {
+      display: flex;
+      justify-content: center;
+      gap: 1rem;
+      margin-top: 1.5rem;
+      flex-wrap: wrap;
+    }
+
+    .controls-group {
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+    }
+
+    .controls-divider {
+      width: 1px;
+      height: 30px;
+      background: rgba(255, 255, 255, 0.2);
+      margin: 0 0.5rem;
+    }
+
+    .btn {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.75rem;
+      padding: 0.7rem 1.5rem;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--text-primary);
+      cursor: pointer;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      transition: all 0.3s ease;
+      backdrop-filter: blur(10px);
+    }
+
+    .btn:hover {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(255, 255, 255, 0.3);
+      transform: translateY(-2px);
+      box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+    }
+
+    .btn--primary {
+      background: linear-gradient(135deg, rgba(255, 45, 85, 0.3), rgba(175, 82, 222, 0.3));
+      border-color: rgba(255, 45, 85, 0.5);
+    }
+
+    .btn--primary:hover {
+      background: linear-gradient(135deg, rgba(255, 45, 85, 0.5), rgba(175, 82, 222, 0.5));
+    }
+
+    .btn--export {
+      background: linear-gradient(135deg, rgba(52, 199, 89, 0.3), rgba(0, 212, 170, 0.3));
+      border-color: rgba(52, 199, 89, 0.5);
+    }
+
+    .btn--export:hover {
+      background: linear-gradient(135deg, rgba(52, 199, 89, 0.5), rgba(0, 212, 170, 0.5));
+    }
+
+    .btn--new {
+      background: linear-gradient(135deg, rgba(90, 200, 250, 0.3), rgba(116, 143, 252, 0.3));
+      border-color: rgba(90, 200, 250, 0.5);
+    }
+
+    .btn--new:hover {
+      background: linear-gradient(135deg, rgba(90, 200, 250, 0.5), rgba(116, 143, 252, 0.5));
+    }
+
+    .btn--danger {
+      background: linear-gradient(135deg, rgba(255, 59, 48, 0.3), rgba(255, 45, 85, 0.3));
+      border-color: rgba(255, 59, 48, 0.5);
+    }
+
+    .btn--danger:hover {
+      background: linear-gradient(135deg, rgba(255, 59, 48, 0.5), rgba(255, 45, 85, 0.5));
+    }
+
+    .btn--small {
+      padding: 0.4rem 0.8rem;
+      font-size: 0.65rem;
+    }
+
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    select.btn {
+      appearance: none;
+      padding-right: 2rem;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23e8e8f0' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 0.7rem center;
+    }
+
+    select.btn option {
+      background: var(--bg-secondary);
+      color: var(--text-primary);
+      padding: 0.5rem;
+    }
+
+    .tier-list {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      margin-bottom: 2rem;
+    }
+
+    .tier-row {
+      display: flex;
+      min-height: 90px;
+      background: var(--bg-secondary);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      overflow: hidden;
+      position: relative;
+    }
+
+    .tier-row.dragging-tier {
+      opacity: 0.5;
+    }
+
+    .tier-row.drag-over-tier {
+      border-top: 3px solid var(--tier-a);
+    }
+
+    .tier-drag-handle {
+      width: 30px;
+      min-width: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: grab;
+      color: var(--text-muted);
+      background: rgba(0, 0, 0, 0.2);
+      transition: background 0.2s ease;
+    }
+
+    .tier-drag-handle:hover {
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--text-primary);
+    }
+
+    .tier-drag-handle:active {
+      cursor: grabbing;
+    }
+
+    .tier-drag-handle svg {
+      width: 16px;
+      height: 16px;
+    }
+
+    .tier-label-container {
+      width: 100px;
+      min-width: 100px;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+
+    .tier-label {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1.8rem;
+      font-weight: 900;
+      letter-spacing: 0.05em;
+      position: relative;
+      overflow: hidden;
+      cursor: pointer;
+      transition: filter 0.2s ease;
+    }
+
+    .tier-label:hover {
+      filter: brightness(1.2);
+    }
+
+    .tier-label::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      opacity: 0.15;
+      background: linear-gradient(135deg, currentColor 0%, transparent 100%);
+    }
+
+    .tier-label::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 150%;
+      height: 150%;
+      transform: translate(-50%, -50%);
+      background: radial-gradient(circle, currentColor 0%, transparent 70%);
+      opacity: 0.1;
+      filter: blur(20px);
+    }
+
+    .tier-label-input {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1.5rem;
+      font-weight: 900;
+      background: transparent;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      color: inherit;
+      text-align: center;
+      padding: 0.3rem;
+      outline: none;
+      width: 90%;
+      margin: auto;
+    }
+
+    .tier-controls {
+      display: flex;
+      gap: 2px;
+      padding: 4px;
+      background: rgba(0, 0, 0, 0.3);
+    }
+
+    .tier-control-btn {
+      width: 22px;
+      height: 22px;
+      border: none;
+      background: rgba(255, 255, 255, 0.1);
+      color: var(--text-muted);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+      padding: 0;
+    }
+
+    .tier-control-btn:hover {
+      background: rgba(255, 255, 255, 0.2);
+      color: var(--text-primary);
+    }
+
+    .tier-control-btn.delete:hover {
+      background: rgba(255, 59, 48, 0.5);
+      color: #fff;
+    }
+
+    .tier-control-btn svg {
+      width: 12px;
+      height: 12px;
+    }
+
+    .color-picker-wrapper {
+      position: relative;
+    }
+
+    .color-picker-wrapper input[type="color"] {
+      position: absolute;
+      width: 22px;
+      height: 22px;
+      opacity: 0;
+      cursor: pointer;
+    }
+
+    .tier-content {
+      flex: 1;
+      display: flex;
+      flex-wrap: wrap;
+      align-content: flex-start;
+      gap: 6px;
+      padding: 10px;
+      background: rgba(0, 0, 0, 0.2);
+      min-height: 90px;
+      transition: background 0.2s ease;
+    }
+
+    .tier-content.drag-over {
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    .add-tier-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      padding: 1rem;
+      background: var(--bg-secondary);
+      border: 2px dashed rgba(255, 255, 255, 0.1);
+      color: var(--text-muted);
+      cursor: pointer;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      transition: all 0.2s ease;
+    }
+
+    .add-tier-btn:hover {
+      border-color: rgba(255, 255, 255, 0.3);
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--text-primary);
+    }
+
+    .element-pool {
+      background: var(--bg-secondary);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      padding: 1.5rem;
+      margin-top: 2rem;
+    }
+
+    .pool-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .pool-header-left {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .pool-title {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 0.9rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+    }
+
+    .pool-count {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+
+    .pool-elements {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      min-height: 100px;
+      transition: background 0.2s ease;
+      padding: 10px;
+      margin: -10px;
+    }
+
+    .pool-elements.drag-over {
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .pool-elements:empty::after {
+      content: 'No items yet. Click "Add Item" to create one, or load a preset.';
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      min-height: 80px;
+      font-style: italic;
+    }
+
+    .item {
+      width: 68px;
+      height: 68px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: var(--bg-tertiary);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      cursor: grab;
+      position: relative;
+      transition: all 0.2s ease;
+      user-select: none;
+    }
+
+    .item:hover {
+      transform: translateY(-3px) scale(1.05);
+      z-index: 10;
+      border-color: rgba(255, 255, 255, 0.3);
+    }
+
+    .item:active {
+      cursor: grabbing;
+    }
+
+    .item.dragging {
+      opacity: 0.5;
+      transform: scale(0.95);
+    }
+
+    .item::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      opacity: 0.15;
+      transition: opacity 0.2s ease;
+    }
+
+    .item:hover::before {
+      opacity: 0.25;
+    }
+
+    .item::after {
+      content: '';
+      position: absolute;
+      top: -1px;
+      left: -1px;
+      right: -1px;
+      bottom: -1px;
+      opacity: 0;
+      transition: opacity 0.2s ease;
+      pointer-events: none;
+    }
+
+    .item:hover::after {
+      opacity: 1;
+    }
+
+    .item-delete {
+      position: absolute;
+      top: -6px;
+      right: -6px;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: rgba(255, 59, 48, 0.9);
+      border: none;
+      color: white;
+      font-size: 12px;
+      cursor: pointer;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 20;
+      padding: 0;
+      line-height: 1;
+    }
+
+    .item:hover .item-delete {
+      display: flex;
+    }
+
+    .item-delete:hover {
+      background: rgba(255, 59, 48, 1);
+      transform: scale(1.1);
+    }
+
+    /* Item category colors */
+    .item[data-category="alkali"]::before { background: linear-gradient(135deg, var(--alkali), transparent); }
+    .item[data-category="alkali"]::after { box-shadow: 0 0 15px var(--alkali), inset 0 0 15px rgba(255, 107, 107, 0.1); }
+    .item[data-category="alkali"] .item-label { color: var(--alkali); }
+
+    .item[data-category="alkaline"]::before { background: linear-gradient(135deg, var(--alkaline), transparent); }
+    .item[data-category="alkaline"]::after { box-shadow: 0 0 15px var(--alkaline), inset 0 0 15px rgba(255, 169, 77, 0.1); }
+    .item[data-category="alkaline"] .item-label { color: var(--alkaline); }
+
+    .item[data-category="transition"]::before { background: linear-gradient(135deg, var(--transition), transparent); }
+    .item[data-category="transition"]::after { box-shadow: 0 0 15px var(--transition), inset 0 0 15px rgba(116, 192, 252, 0.1); }
+    .item[data-category="transition"] .item-label { color: var(--transition); }
+
+    .item[data-category="post-transition"]::before { background: linear-gradient(135deg, var(--post-transition), transparent); }
+    .item[data-category="post-transition"]::after { box-shadow: 0 0 15px var(--post-transition), inset 0 0 15px rgba(105, 219, 124, 0.1); }
+    .item[data-category="post-transition"] .item-label { color: var(--post-transition); }
+
+    .item[data-category="metalloid"]::before { background: linear-gradient(135deg, var(--metalloid), transparent); }
+    .item[data-category="metalloid"]::after { box-shadow: 0 0 15px var(--metalloid), inset 0 0 15px rgba(218, 119, 242, 0.1); }
+    .item[data-category="metalloid"] .item-label { color: var(--metalloid); }
+
+    .item[data-category="nonmetal"]::before { background: linear-gradient(135deg, var(--nonmetal), transparent); }
+    .item[data-category="nonmetal"]::after { box-shadow: 0 0 15px var(--nonmetal), inset 0 0 15px rgba(255, 212, 59, 0.1); }
+    .item[data-category="nonmetal"] .item-label { color: var(--nonmetal); }
+
+    .item[data-category="halogen"]::before { background: linear-gradient(135deg, var(--halogen), transparent); }
+    .item[data-category="halogen"]::after { box-shadow: 0 0 15px var(--halogen), inset 0 0 15px rgba(56, 217, 169, 0.1); }
+    .item[data-category="halogen"] .item-label { color: var(--halogen); }
+
+    .item[data-category="noble"]::before { background: linear-gradient(135deg, var(--noble), transparent); }
+    .item[data-category="noble"]::after { box-shadow: 0 0 15px var(--noble), inset 0 0 15px rgba(116, 143, 252, 0.1); }
+    .item[data-category="noble"] .item-label { color: var(--noble); }
+
+    .item[data-category="lanthanide"]::before { background: linear-gradient(135deg, var(--lanthanide), transparent); }
+    .item[data-category="lanthanide"]::after { box-shadow: 0 0 15px var(--lanthanide), inset 0 0 15px rgba(247, 131, 172, 0.1); }
+    .item[data-category="lanthanide"] .item-label { color: var(--lanthanide); }
+
+    .item[data-category="actinide"]::before { background: linear-gradient(135deg, var(--actinide), transparent); }
+    .item[data-category="actinide"]::after { box-shadow: 0 0 15px var(--actinide), inset 0 0 15px rgba(255, 135, 135, 0.1); }
+    .item[data-category="actinide"] .item-label { color: var(--actinide); }
+
+    .item[data-category="unknown"]::before { background: linear-gradient(135deg, var(--unknown), transparent); }
+    .item[data-category="unknown"]::after { box-shadow: 0 0 15px var(--unknown), inset 0 0 15px rgba(134, 142, 150, 0.1); }
+    .item[data-category="unknown"] .item-label { color: var(--unknown); }
+
+    .item[data-category="custom"]::before { background: linear-gradient(135deg, var(--custom), transparent); }
+    .item[data-category="custom"]::after { box-shadow: 0 0 15px var(--custom), inset 0 0 15px rgba(160, 160, 160, 0.1); }
+    .item[data-category="custom"] .item-label { color: var(--custom); }
+
+    .item-sublabel {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.6rem;
+      color: var(--text-muted);
+      position: absolute;
+      top: 4px;
+      left: 6px;
+    }
+
+    .item-label {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1.4rem;
+      font-weight: 700;
+      line-height: 1;
+      position: relative;
+      z-index: 1;
+      text-align: center;
+      max-width: 60px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .item-label.small {
+      font-size: 0.9rem;
+    }
+
+    .item-name {
+      font-family: 'Outfit', sans-serif;
+      font-size: 0.5rem;
+      color: var(--text-muted);
+      margin-top: 2px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      max-width: 60px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      position: relative;
+      z-index: 1;
+    }
+
+    .item-image {
+      width: 50px;
+      height: 50px;
+      object-fit: cover;
+      border-radius: 4px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .item.image-item {
+      padding: 4px;
+    }
+
+    .item.image-item .item-name {
+      position: absolute;
+      bottom: 2px;
+      margin-top: 0;
+    }
+
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      justify-content: center;
+      margin-top: 2rem;
+      padding: 1rem;
+      background: var(--bg-secondary);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      cursor: pointer;
+      padding: 0.3rem 0.5rem;
+      border-radius: 4px;
+      transition: background 0.2s ease;
+    }
+
+    .legend-item:hover {
+      background: rgba(255, 255, 255, 0.1);
+      color: var(--text-primary);
+    }
+
+    .legend-color {
+      width: 12px;
+      height: 12px;
+      border-radius: 2px;
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 2rem;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      background: var(--bg-tertiary);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 1rem 2rem;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem;
+      opacity: 0;
+      transition: all 0.3s ease;
+      z-index: 1000;
+    }
+
+    .toast.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
+
+    /* Modal styles */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.8);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.3s ease;
+    }
+
+    .modal-overlay.show {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .modal {
+      background: var(--bg-secondary);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 2rem;
+      max-width: 500px;
+      width: 90%;
+      max-height: 90vh;
+      overflow-y: auto;
+      transform: scale(0.9);
+      transition: transform 0.3s ease;
+    }
+
+    .modal-overlay.show .modal {
+      transform: scale(1);
+    }
+
+    .modal h2 {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1.2rem;
+      margin-bottom: 1.5rem;
+      letter-spacing: 0.1em;
+    }
+
+    .modal-tabs {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .modal-tab {
+      flex: 1;
+      padding: 0.7rem;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: var(--text-muted);
+      cursor: pointer;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      transition: all 0.2s ease;
+    }
+
+    .modal-tab:hover {
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    .modal-tab.active {
+      background: rgba(255, 255, 255, 0.15);
+      border-color: rgba(255, 255, 255, 0.3);
+      color: var(--text-primary);
+    }
+
+    .form-group {
+      margin-bottom: 1.5rem;
+    }
+
+    .form-group label {
+      display: block;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--text-muted);
+      margin-bottom: 0.5rem;
+    }
+
+    .form-group input[type="text"],
+    .form-group select {
+      width: 100%;
+      padding: 0.8rem;
+      background: rgba(0, 0, 0, 0.3);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: var(--text-primary);
+      font-family: 'Outfit', sans-serif;
+      font-size: 1rem;
+      outline: none;
+      transition: border-color 0.2s ease;
+    }
+
+    .form-group input[type="text"]:focus,
+    .form-group select:focus {
+      border-color: rgba(255, 255, 255, 0.3);
+    }
+
+    .form-group select {
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23e8e8f0' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 0.8rem center;
+      padding-right: 2.5rem;
+    }
+
+    .form-group select option {
+      background: var(--bg-secondary);
+      color: var(--text-primary);
+    }
+
+    .form-group .hint {
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      margin-top: 0.3rem;
+    }
+
+    .image-upload-area {
+      border: 2px dashed rgba(255, 255, 255, 0.2);
+      padding: 2rem;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .image-upload-area:hover {
+      border-color: rgba(255, 255, 255, 0.4);
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .image-upload-area.has-image {
+      padding: 1rem;
+    }
+
+    .image-upload-area img {
+      max-width: 100px;
+      max-height: 100px;
+      object-fit: contain;
+    }
+
+    .image-upload-area input[type="file"] {
+      display: none;
+    }
+
+    .image-upload-area p {
+      color: var(--text-muted);
+      font-size: 0.85rem;
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 1rem;
+      justify-content: flex-end;
+      margin-top: 2rem;
+    }
+
+    .color-preview {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border-radius: 4px;
+      vertical-align: middle;
+      margin-right: 0.5rem;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    @media (max-width: 768px) {
+      .app {
+        padding: 1rem;
+      }
+
+      .tier-drag-handle {
+        width: 20px;
+        min-width: 20px;
+      }
+
+      .tier-label-container {
+        width: 60px;
+        min-width: 60px;
+      }
+
+      .tier-label {
+        font-size: 1.2rem;
+      }
+
+      .item {
+        width: 52px;
+        height: 52px;
+      }
+
+      .item-label {
+        font-size: 1.1rem;
+      }
+
+      .item-label.small {
+        font-size: 0.7rem;
+      }
+
+      .item-name {
+        font-size: 0.4rem;
+      }
+
+      .legend {
+        gap: 0.5rem;
+      }
+
+      .legend-item {
+        font-size: 0.6rem;
+      }
+
+      .controls {
+        gap: 0.5rem;
+      }
+
+      .controls-divider {
+        display: none;
+      }
+
+      .btn {
+        padding: 0.5rem 0.8rem;
+        font-size: 0.65rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="noise-overlay"></div>
+
+  <div class="app">
+    <header>
+      <div class="title-container">
+        <h1 id="tierListTitle" onclick="editTitle()">Tier List</h1>
+      </div>
+      <p class="subtitle">Drag and drop to rank items</p>
+      <div class="controls">
+        <div class="controls-group">
+          <button class="btn btn--new" onclick="newTierList()">New</button>
+          <select class="btn" id="presetSelect" onchange="loadPreset(this.value)">
+            <option value="">Load Preset...</option>
+            <option value="periodic-elements">Periodic Elements</option>
+            <option value="pony-play">Pony Play</option>
+            <option value="blank">Blank Template</option>
+          </select>
+        </div>
+        <div class="controls-divider"></div>
+        <div class="controls-group">
+          <button class="btn btn--primary" onclick="saveTierList()">Save</button>
+          <button class="btn" onclick="loadTierList()">Load</button>
+          <button class="btn btn--export" onclick="exportAsPNG()">Export PNG</button>
+        </div>
+      </div>
+    </header>
+
+    <div class="tier-list" id="tierList"></div>
+    <button class="add-tier-btn" onclick="addTier()">+ Add Tier</button>
+
+    <div class="element-pool">
+      <div class="pool-header">
+        <div class="pool-header-left">
+          <span class="pool-title">Unranked Items</span>
+          <span class="pool-count" id="poolCount">0 items</span>
+        </div>
+        <button class="btn btn--small btn--new" onclick="openAddItemModal()">+ Add Item</button>
+      </div>
+      <div class="pool-elements" id="itemPool"></div>
+    </div>
+
+    <div class="legend" id="legend"></div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <!-- Add Item Modal -->
+  <div class="modal-overlay" id="addItemModal">
+    <div class="modal">
+      <h2 id="itemModalTitle">Add New Item</h2>
+      <div class="modal-tabs">
+        <button class="modal-tab active" data-tab="text" onclick="switchItemTab('text')">Text</button>
+        <button class="modal-tab" data-tab="image" onclick="switchItemTab('image')">Image</button>
+      </div>
+      <div id="textItemForm">
+        <div class="form-group">
+          <label>Label (required)</label>
+          <input type="text" id="itemLabel" placeholder="e.g. Au, S, Pizza" maxlength="5">
+          <p class="hint">Short label shown on the item (1-5 characters)</p>
+        </div>
+        <div class="form-group">
+          <label>Sublabel (optional)</label>
+          <input type="text" id="itemSublabel" placeholder="e.g. 79, tier-1" maxlength="10">
+          <p class="hint">Small text in the top-left corner</p>
+        </div>
+        <div class="form-group">
+          <label>Name (optional)</label>
+          <input type="text" id="itemName" placeholder="e.g. Gold, Best Tier" maxlength="20">
+          <p class="hint">Text shown below the label</p>
+        </div>
+      </div>
+      <div id="imageItemForm" style="display: none;">
+        <div class="form-group">
+          <label>Image</label>
+          <div class="image-upload-area" id="imageUploadArea" onclick="document.getElementById('imageInput').click()">
+            <input type="file" id="imageInput" accept="image/*" onchange="handleImageUpload(event)">
+            <p>Click to upload an image</p>
+          </div>
+          <p class="hint">Images are stored as base64. Keep under 500KB for best performance.</p>
+        </div>
+        <div class="form-group">
+          <label>Name (optional)</label>
+          <input type="text" id="imageItemName" placeholder="Label below image" maxlength="20">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Category</label>
+        <select id="itemCategory"></select>
+      </div>
+      <div class="modal-actions">
+        <button class="btn" onclick="closeAddItemModal()">Cancel</button>
+        <button class="btn btn--primary" id="itemModalSubmit" onclick="saveItem()">Add Item</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Confirm Modal -->
+  <div class="modal-overlay" id="confirmModal">
+    <div class="modal">
+      <h2 id="confirmTitle">Confirm</h2>
+      <p id="confirmMessage" style="color: var(--text-muted); margin-bottom: 1.5rem;"></p>
+      <div class="modal-actions">
+        <button class="btn" onclick="closeConfirmModal()">Cancel</button>
+        <button class="btn btn--danger" id="confirmBtn" onclick="confirmAction()">Confirm</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit Category Modal -->
+  <div class="modal-overlay" id="editCategoryModal">
+    <div class="modal">
+      <h2>Edit Category</h2>
+      <div class="form-group">
+        <label>Category Name</label>
+        <input type="text" id="categoryName" placeholder="e.g. Favorites, Top Picks" maxlength="20">
+      </div>
+      <div class="form-group">
+        <label>Color</label>
+        <div style="display: flex; align-items: center; gap: 1rem;">
+          <input type="color" id="categoryColor" style="width: 50px; height: 40px; border: none; cursor: pointer;">
+          <span id="categoryColorHex" style="font-family: 'JetBrains Mono', monospace; color: var(--text-muted);">#000000</span>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn" onclick="closeCategoryModal()">Cancel</button>
+        <button class="btn btn--primary" onclick="saveCategory()">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ============================================
+    // PRESETS
+    // ============================================
+    const PRESETS = {
+      'periodic-elements': {
+        meta: { name: 'Periodic Elements Tier List' },
+        tiers: [
+          { id: 'splus', name: 'S++', color: '#ff2d55' },
+          { id: 's', name: 'S', color: '#ff6b35' },
+          { id: 'a', name: 'A', color: '#ffcc00' },
+          { id: 'b', name: 'B', color: '#34c759' },
+          { id: 'c', name: 'C', color: '#00d4aa' },
+          { id: 'd', name: 'D', color: '#5ac8fa' },
+          { id: 'f', name: 'F', color: '#af52de' }
+        ],
+        items: [
+          { id: 'e1', type: 'text', label: 'H', sublabel: '1', name: 'Hydrogen', category: 'nonmetal' },
+          { id: 'e2', type: 'text', label: 'He', sublabel: '2', name: 'Helium', category: 'noble' },
+          { id: 'e3', type: 'text', label: 'Li', sublabel: '3', name: 'Lithium', category: 'alkali' },
+          { id: 'e4', type: 'text', label: 'Be', sublabel: '4', name: 'Beryllium', category: 'alkaline' },
+          { id: 'e5', type: 'text', label: 'B', sublabel: '5', name: 'Boron', category: 'metalloid' },
+          { id: 'e6', type: 'text', label: 'C', sublabel: '6', name: 'Carbon', category: 'nonmetal' },
+          { id: 'e7', type: 'text', label: 'N', sublabel: '7', name: 'Nitrogen', category: 'nonmetal' },
+          { id: 'e8', type: 'text', label: 'O', sublabel: '8', name: 'Oxygen', category: 'nonmetal' },
+          { id: 'e9', type: 'text', label: 'F', sublabel: '9', name: 'Fluorine', category: 'halogen' },
+          { id: 'e10', type: 'text', label: 'Ne', sublabel: '10', name: 'Neon', category: 'noble' },
+          { id: 'e11', type: 'text', label: 'Na', sublabel: '11', name: 'Sodium', category: 'alkali' },
+          { id: 'e12', type: 'text', label: 'Mg', sublabel: '12', name: 'Magnesium', category: 'alkaline' },
+          { id: 'e13', type: 'text', label: 'Al', sublabel: '13', name: 'Aluminium', category: 'post-transition' },
+          { id: 'e14', type: 'text', label: 'Si', sublabel: '14', name: 'Silicon', category: 'metalloid' },
+          { id: 'e15', type: 'text', label: 'P', sublabel: '15', name: 'Phosphorus', category: 'nonmetal' },
+          { id: 'e16', type: 'text', label: 'S', sublabel: '16', name: 'Sulfur', category: 'nonmetal' },
+          { id: 'e17', type: 'text', label: 'Cl', sublabel: '17', name: 'Chlorine', category: 'halogen' },
+          { id: 'e18', type: 'text', label: 'Ar', sublabel: '18', name: 'Argon', category: 'noble' },
+          { id: 'e19', type: 'text', label: 'K', sublabel: '19', name: 'Potassium', category: 'alkali' },
+          { id: 'e20', type: 'text', label: 'Ca', sublabel: '20', name: 'Calcium', category: 'alkaline' },
+          { id: 'e21', type: 'text', label: 'Sc', sublabel: '21', name: 'Scandium', category: 'transition' },
+          { id: 'e22', type: 'text', label: 'Ti', sublabel: '22', name: 'Titanium', category: 'transition' },
+          { id: 'e23', type: 'text', label: 'V', sublabel: '23', name: 'Vanadium', category: 'transition' },
+          { id: 'e24', type: 'text', label: 'Cr', sublabel: '24', name: 'Chromium', category: 'transition' },
+          { id: 'e25', type: 'text', label: 'Mn', sublabel: '25', name: 'Manganese', category: 'transition' },
+          { id: 'e26', type: 'text', label: 'Fe', sublabel: '26', name: 'Iron', category: 'transition' },
+          { id: 'e27', type: 'text', label: 'Co', sublabel: '27', name: 'Cobalt', category: 'transition' },
+          { id: 'e28', type: 'text', label: 'Ni', sublabel: '28', name: 'Nickel', category: 'transition' },
+          { id: 'e29', type: 'text', label: 'Cu', sublabel: '29', name: 'Copper', category: 'transition' },
+          { id: 'e30', type: 'text', label: 'Zn', sublabel: '30', name: 'Zinc', category: 'transition' },
+          { id: 'e31', type: 'text', label: 'Ga', sublabel: '31', name: 'Gallium', category: 'post-transition' },
+          { id: 'e32', type: 'text', label: 'Ge', sublabel: '32', name: 'Germanium', category: 'metalloid' },
+          { id: 'e33', type: 'text', label: 'As', sublabel: '33', name: 'Arsenic', category: 'metalloid' },
+          { id: 'e34', type: 'text', label: 'Se', sublabel: '34', name: 'Selenium', category: 'nonmetal' },
+          { id: 'e35', type: 'text', label: 'Br', sublabel: '35', name: 'Bromine', category: 'halogen' },
+          { id: 'e36', type: 'text', label: 'Kr', sublabel: '36', name: 'Krypton', category: 'noble' },
+          { id: 'e37', type: 'text', label: 'Rb', sublabel: '37', name: 'Rubidium', category: 'alkali' },
+          { id: 'e38', type: 'text', label: 'Sr', sublabel: '38', name: 'Strontium', category: 'alkaline' },
+          { id: 'e39', type: 'text', label: 'Y', sublabel: '39', name: 'Yttrium', category: 'transition' },
+          { id: 'e40', type: 'text', label: 'Zr', sublabel: '40', name: 'Zirconium', category: 'transition' },
+          { id: 'e41', type: 'text', label: 'Nb', sublabel: '41', name: 'Niobium', category: 'transition' },
+          { id: 'e42', type: 'text', label: 'Mo', sublabel: '42', name: 'Molybdenum', category: 'transition' },
+          { id: 'e43', type: 'text', label: 'Tc', sublabel: '43', name: 'Technetium', category: 'transition' },
+          { id: 'e44', type: 'text', label: 'Ru', sublabel: '44', name: 'Ruthenium', category: 'transition' },
+          { id: 'e45', type: 'text', label: 'Rh', sublabel: '45', name: 'Rhodium', category: 'transition' },
+          { id: 'e46', type: 'text', label: 'Pd', sublabel: '46', name: 'Palladium', category: 'transition' },
+          { id: 'e47', type: 'text', label: 'Ag', sublabel: '47', name: 'Silver', category: 'transition' },
+          { id: 'e48', type: 'text', label: 'Cd', sublabel: '48', name: 'Cadmium', category: 'transition' },
+          { id: 'e49', type: 'text', label: 'In', sublabel: '49', name: 'Indium', category: 'post-transition' },
+          { id: 'e50', type: 'text', label: 'Sn', sublabel: '50', name: 'Tin', category: 'post-transition' },
+          { id: 'e51', type: 'text', label: 'Sb', sublabel: '51', name: 'Antimony', category: 'metalloid' },
+          { id: 'e52', type: 'text', label: 'Te', sublabel: '52', name: 'Tellurium', category: 'metalloid' },
+          { id: 'e53', type: 'text', label: 'I', sublabel: '53', name: 'Iodine', category: 'halogen' },
+          { id: 'e54', type: 'text', label: 'Xe', sublabel: '54', name: 'Xenon', category: 'noble' },
+          { id: 'e55', type: 'text', label: 'Cs', sublabel: '55', name: 'Caesium', category: 'alkali' },
+          { id: 'e56', type: 'text', label: 'Ba', sublabel: '56', name: 'Barium', category: 'alkaline' },
+          { id: 'e57', type: 'text', label: 'La', sublabel: '57', name: 'Lanthanum', category: 'lanthanide' },
+          { id: 'e58', type: 'text', label: 'Ce', sublabel: '58', name: 'Cerium', category: 'lanthanide' },
+          { id: 'e59', type: 'text', label: 'Pr', sublabel: '59', name: 'Praseodymium', category: 'lanthanide' },
+          { id: 'e60', type: 'text', label: 'Nd', sublabel: '60', name: 'Neodymium', category: 'lanthanide' },
+          { id: 'e61', type: 'text', label: 'Pm', sublabel: '61', name: 'Promethium', category: 'lanthanide' },
+          { id: 'e62', type: 'text', label: 'Sm', sublabel: '62', name: 'Samarium', category: 'lanthanide' },
+          { id: 'e63', type: 'text', label: 'Eu', sublabel: '63', name: 'Europium', category: 'lanthanide' },
+          { id: 'e64', type: 'text', label: 'Gd', sublabel: '64', name: 'Gadolinium', category: 'lanthanide' },
+          { id: 'e65', type: 'text', label: 'Tb', sublabel: '65', name: 'Terbium', category: 'lanthanide' },
+          { id: 'e66', type: 'text', label: 'Dy', sublabel: '66', name: 'Dysprosium', category: 'lanthanide' },
+          { id: 'e67', type: 'text', label: 'Ho', sublabel: '67', name: 'Holmium', category: 'lanthanide' },
+          { id: 'e68', type: 'text', label: 'Er', sublabel: '68', name: 'Erbium', category: 'lanthanide' },
+          { id: 'e69', type: 'text', label: 'Tm', sublabel: '69', name: 'Thulium', category: 'lanthanide' },
+          { id: 'e70', type: 'text', label: 'Yb', sublabel: '70', name: 'Ytterbium', category: 'lanthanide' },
+          { id: 'e71', type: 'text', label: 'Lu', sublabel: '71', name: 'Lutetium', category: 'lanthanide' },
+          { id: 'e72', type: 'text', label: 'Hf', sublabel: '72', name: 'Hafnium', category: 'transition' },
+          { id: 'e73', type: 'text', label: 'Ta', sublabel: '73', name: 'Tantalum', category: 'transition' },
+          { id: 'e74', type: 'text', label: 'W', sublabel: '74', name: 'Tungsten', category: 'transition' },
+          { id: 'e75', type: 'text', label: 'Re', sublabel: '75', name: 'Rhenium', category: 'transition' },
+          { id: 'e76', type: 'text', label: 'Os', sublabel: '76', name: 'Osmium', category: 'transition' },
+          { id: 'e77', type: 'text', label: 'Ir', sublabel: '77', name: 'Iridium', category: 'transition' },
+          { id: 'e78', type: 'text', label: 'Pt', sublabel: '78', name: 'Platinum', category: 'transition' },
+          { id: 'e79', type: 'text', label: 'Au', sublabel: '79', name: 'Gold', category: 'transition' },
+          { id: 'e80', type: 'text', label: 'Hg', sublabel: '80', name: 'Mercury', category: 'transition' },
+          { id: 'e81', type: 'text', label: 'Tl', sublabel: '81', name: 'Thallium', category: 'post-transition' },
+          { id: 'e82', type: 'text', label: 'Pb', sublabel: '82', name: 'Lead', category: 'post-transition' },
+          { id: 'e83', type: 'text', label: 'Bi', sublabel: '83', name: 'Bismuth', category: 'post-transition' },
+          { id: 'e84', type: 'text', label: 'Po', sublabel: '84', name: 'Polonium', category: 'post-transition' },
+          { id: 'e85', type: 'text', label: 'At', sublabel: '85', name: 'Astatine', category: 'halogen' },
+          { id: 'e86', type: 'text', label: 'Rn', sublabel: '86', name: 'Radon', category: 'noble' },
+          { id: 'e87', type: 'text', label: 'Fr', sublabel: '87', name: 'Francium', category: 'alkali' },
+          { id: 'e88', type: 'text', label: 'Ra', sublabel: '88', name: 'Radium', category: 'alkaline' },
+          { id: 'e89', type: 'text', label: 'Ac', sublabel: '89', name: 'Actinium', category: 'actinide' },
+          { id: 'e90', type: 'text', label: 'Th', sublabel: '90', name: 'Thorium', category: 'actinide' },
+          { id: 'e91', type: 'text', label: 'Pa', sublabel: '91', name: 'Protactinium', category: 'actinide' },
+          { id: 'e92', type: 'text', label: 'U', sublabel: '92', name: 'Uranium', category: 'actinide' },
+          { id: 'e93', type: 'text', label: 'Np', sublabel: '93', name: 'Neptunium', category: 'actinide' },
+          { id: 'e94', type: 'text', label: 'Pu', sublabel: '94', name: 'Plutonium', category: 'actinide' },
+          { id: 'e95', type: 'text', label: 'Am', sublabel: '95', name: 'Americium', category: 'actinide' },
+          { id: 'e96', type: 'text', label: 'Cm', sublabel: '96', name: 'Curium', category: 'actinide' },
+          { id: 'e97', type: 'text', label: 'Bk', sublabel: '97', name: 'Berkelium', category: 'actinide' },
+          { id: 'e98', type: 'text', label: 'Cf', sublabel: '98', name: 'Californium', category: 'actinide' },
+          { id: 'e99', type: 'text', label: 'Es', sublabel: '99', name: 'Einsteinium', category: 'actinide' },
+          { id: 'e100', type: 'text', label: 'Fm', sublabel: '100', name: 'Fermium', category: 'actinide' },
+          { id: 'e101', type: 'text', label: 'Md', sublabel: '101', name: 'Mendelevium', category: 'actinide' },
+          { id: 'e102', type: 'text', label: 'No', sublabel: '102', name: 'Nobelium', category: 'actinide' },
+          { id: 'e103', type: 'text', label: 'Lr', sublabel: '103', name: 'Lawrencium', category: 'actinide' },
+          { id: 'e104', type: 'text', label: 'Rf', sublabel: '104', name: 'Rutherfordium', category: 'transition' },
+          { id: 'e105', type: 'text', label: 'Db', sublabel: '105', name: 'Dubnium', category: 'transition' },
+          { id: 'e106', type: 'text', label: 'Sg', sublabel: '106', name: 'Seaborgium', category: 'transition' },
+          { id: 'e107', type: 'text', label: 'Bh', sublabel: '107', name: 'Bohrium', category: 'transition' },
+          { id: 'e108', type: 'text', label: 'Hs', sublabel: '108', name: 'Hassium', category: 'transition' },
+          { id: 'e109', type: 'text', label: 'Mt', sublabel: '109', name: 'Meitnerium', category: 'unknown' },
+          { id: 'e110', type: 'text', label: 'Ds', sublabel: '110', name: 'Darmstadtium', category: 'unknown' },
+          { id: 'e111', type: 'text', label: 'Rg', sublabel: '111', name: 'Roentgenium', category: 'unknown' },
+          { id: 'e112', type: 'text', label: 'Cn', sublabel: '112', name: 'Copernicium', category: 'transition' },
+          { id: 'e113', type: 'text', label: 'Nh', sublabel: '113', name: 'Nihonium', category: 'unknown' },
+          { id: 'e114', type: 'text', label: 'Fl', sublabel: '114', name: 'Flerovium', category: 'unknown' },
+          { id: 'e115', type: 'text', label: 'Mc', sublabel: '115', name: 'Moscovium', category: 'unknown' },
+          { id: 'e116', type: 'text', label: 'Lv', sublabel: '116', name: 'Livermorium', category: 'unknown' },
+          { id: 'e117', type: 'text', label: 'Ts', sublabel: '117', name: 'Tennessine', category: 'unknown' },
+          { id: 'e118', type: 'text', label: 'Og', sublabel: '118', name: 'Oganesson', category: 'unknown' }
+        ],
+        placements: { pool: [], tiers: {} },
+        categories: {
+          alkali: { name: 'Alkali Metals', color: '#ff6b6b' },
+          alkaline: { name: 'Alkaline Earth', color: '#ffa94d' },
+          transition: { name: 'Transition Metals', color: '#74c0fc' },
+          'post-transition': { name: 'Post-Transition', color: '#69db7c' },
+          metalloid: { name: 'Metalloids', color: '#da77f2' },
+          nonmetal: { name: 'Nonmetals', color: '#ffd43b' },
+          halogen: { name: 'Halogens', color: '#38d9a9' },
+          noble: { name: 'Noble Gases', color: '#748ffc' },
+          lanthanide: { name: 'Lanthanides', color: '#f783ac' },
+          actinide: { name: 'Actinides', color: '#ff8787' },
+          unknown: { name: 'Unknown', color: '#868e96' }
+        }
+      },
+      'blank': {
+        meta: { name: 'My Tier List' },
+        tiers: [
+          { id: 's', name: 'S', color: '#ff6b35' },
+          { id: 'a', name: 'A', color: '#ffcc00' },
+          { id: 'b', name: 'B', color: '#34c759' },
+          { id: 'c', name: 'C', color: '#00d4aa' },
+          { id: 'd', name: 'D', color: '#5ac8fa' },
+          { id: 'f', name: 'F', color: '#af52de' }
+        ],
+        items: [],
+        placements: { pool: [], tiers: {} },
+        categories: {}
+      },
+      'pony-play': {
+        meta: { name: 'Pony Play Tier List' },
+        tiers: [
+          { id: 's', name: 'S', color: '#ff6b35' },
+          { id: 'a', name: 'A', color: '#ffcc00' },
+          { id: 'b', name: 'B', color: '#34c759' },
+          { id: 'c', name: 'C', color: '#00d4aa' },
+          { id: 'd', name: 'D', color: '#5ac8fa' },
+          { id: 'f', name: 'F', color: '#af52de' }
+        ],
+        items: [
+          { id: 'pp1', type: 'text', label: 'Ma', sublabel: 'Mare', name: 'Mare', category: 'alkali' },
+          { id: 'pp2', type: 'text', label: 'Cat', sublabel: 'Cat', name: 'Cat', category: 'halogen' },
+          { id: 'pp3', type: 'text', label: 'Po', sublabel: 'Pony', name: 'Pony', category: 'alkali' },
+          { id: 'pp4', type: 'text', label: 'Fi', sublabel: 'Filly', name: 'Filly', category: 'alkali' },
+          { id: 'pp5', type: 'text', label: 'St', sublabel: 'Stallion', name: 'Stallion', category: 'alkali' },
+          { id: 'pp6', type: 'text', label: 'Moo', sublabel: 'Cow', name: 'Cow', category: 'alkaline' },
+          { id: 'pp7', type: 'text', label: 'Pup', sublabel: 'Dog', name: 'Dog', category: 'halogen' },
+          { id: 'pp8', type: 'text', label: 'Bat', sublabel: 'Bat', name: 'Bat', category: 'unknown' },
+          { id: 'pp9', type: 'text', label: 'Ge', sublabel: 'Gelding', name: 'Gelding', category: 'alkali' },
+          { id: 'pp10', type: 'text', label: 'Sh', sublabel: 'Sheep', name: 'Sheep', category: 'alkaline' },
+          { id: 'pp11', type: 'text', label: 'Sq', sublabel: 'Squirrel', name: 'Squirrel', category: 'unknown' },
+          { id: 'pp12', type: 'text', label: 'Fo', sublabel: 'Fox', name: 'Fox', category: 'unknown' },
+          { id: 'pp13', type: 'text', label: 'Go', sublabel: 'Goat', name: 'Goat', category: 'alkaline' },
+          { id: 'pp14', type: 'text', label: 'Gr', sublabel: 'Groom', name: 'Groom', category: 'noble' },
+          { id: 'pp15', type: 'text', label: 'Tr', sublabel: 'Trainer', name: 'Trainer', category: 'noble' }
+        ],
+        placements: { pool: [], tiers: {} },
+        categories: {
+          alkali: { name: 'Equine', color: '#ff6b6b' },
+          halogen: { name: 'Pets', color: '#38d9a9' },
+          noble: { name: 'Humans', color: '#748ffc' },
+          alkaline: { name: 'Livestock', color: '#ffa94d' },
+          unknown: { name: 'Other', color: '#868e96' }
+        }
+      }
+    };
+
+    // ============================================
+    // STATE MANAGEMENT
+    // ============================================
+    let state = {
+      meta: { id: generateId(), name: 'My Tier List', createdAt: Date.now(), modifiedAt: Date.now() },
+      tiers: [
+        { id: 's', name: 'S', color: '#ff6b35' },
+        { id: 'a', name: 'A', color: '#ffcc00' },
+        { id: 'b', name: 'B', color: '#34c759' },
+        { id: 'c', name: 'C', color: '#00d4aa' },
+        { id: 'd', name: 'D', color: '#5ac8fa' },
+        { id: 'f', name: 'F', color: '#af52de' }
+      ],
+      items: [],
+      placements: { pool: [], tiers: {} },
+      categories: {}
+    };
+
+    let draggedItem = null;
+    let draggedTierRow = null;
+    let pendingConfirmAction = null;
+    let currentItemTab = 'text';
+    let uploadedImageData = null;
+    let editingItemId = null;
+
+    function generateId() {
+      return 'id_' + Math.random().toString(36).substr(2, 9) + '_' + Date.now().toString(36);
+    }
+
+    function getItemById(id) {
+      return state.items.find(item => item.id === id);
+    }
+
+    function getTierById(id) {
+      return state.tiers.find(tier => tier.id === id);
+    }
+
+    // ============================================
+    // RENDERING
+    // ============================================
+    function createItemCard(item) {
+      const card = document.createElement('div');
+      card.className = 'item' + (item.type === 'image' ? ' image-item' : '');
+      card.dataset.id = item.id;
+      card.dataset.category = item.category || 'custom';
+      card.draggable = true;
+      card.title = 'Double-click to edit';
+
+      if (item.type === 'image' && item.imageData) {
+        card.innerHTML = `
+          <button class="item-delete" onclick="deleteItem('${item.id}', event)">&times;</button>
+          <img class="item-image" src="${item.imageData}" alt="${item.name || ''}">
+          ${item.name ? `<span class="item-name">${item.name}</span>` : ''}
+        `;
+      } else {
+        const labelClass = item.label && item.label.length > 2 ? 'item-label small' : 'item-label';
+        card.innerHTML = `
+          <button class="item-delete" onclick="deleteItem('${item.id}', event)">&times;</button>
+          ${item.sublabel ? `<span class="item-sublabel">${item.sublabel}</span>` : ''}
+          <span class="${labelClass}">${item.label || '?'}</span>
+          ${item.name ? `<span class="item-name">${item.name}</span>` : ''}
+        `;
+      }
+
+      card.addEventListener('dragstart', handleDragStart);
+      card.addEventListener('dragend', handleDragEnd);
+      card.addEventListener('dblclick', (e) => {
+        e.preventDefault();
+        editItem(item.id);
+      });
+
+      return card;
+    }
+
+    function renderTierRow(tier) {
+      const row = document.createElement('div');
+      row.className = 'tier-row';
+      row.dataset.tierId = tier.id;
+      row.draggable = true;
+
+      row.innerHTML = `
+        <div class="tier-drag-handle" title="Drag to reorder">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="8" y1="6" x2="16" y2="6"></line>
+            <line x1="8" y1="12" x2="16" y2="12"></line>
+            <line x1="8" y1="18" x2="16" y2="18"></line>
+          </svg>
+        </div>
+        <div class="tier-label-container">
+          <div class="tier-label" style="color: ${tier.color}; text-shadow: 0 0 30px ${tier.color};" onclick="editTierName('${tier.id}')">${tier.name}</div>
+          <div class="tier-controls">
+            <div class="color-picker-wrapper">
+              <input type="color" value="${tier.color}" onchange="changeTierColor('${tier.id}', this.value)">
+              <button class="tier-control-btn" title="Change color">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="12" r="10"></circle>
+                </svg>
+              </button>
+            </div>
+            <button class="tier-control-btn delete" title="Delete tier" onclick="deleteTier('${tier.id}')">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+              </svg>
+            </button>
+          </div>
+        </div>
+        <div class="tier-content" data-tier-id="${tier.id}"></div>
+      `;
+
+      // Tier row drag events
+      const handle = row.querySelector('.tier-drag-handle');
+      handle.addEventListener('mousedown', () => { row.dataset.canDrag = 'true'; });
+      handle.addEventListener('mouseup', () => { row.dataset.canDrag = 'false'; });
+
+      row.addEventListener('dragstart', (e) => {
+        if (row.dataset.canDrag !== 'true') {
+          e.preventDefault();
+          return;
+        }
+        handleTierDragStart(e, tier.id);
+      });
+      row.addEventListener('dragend', handleTierDragEnd);
+      row.addEventListener('dragover', handleTierDragOver);
+      row.addEventListener('drop', handleTierDrop);
+
+      // Item drop events
+      const content = row.querySelector('.tier-content');
+      content.addEventListener('dragover', handleDragOver);
+      content.addEventListener('dragenter', handleDragEnter);
+      content.addEventListener('dragleave', handleDragLeave);
+      content.addEventListener('drop', handleDrop);
+
+      return row;
+    }
+
+    function renderTierList() {
+      const tierList = document.getElementById('tierList');
+      tierList.innerHTML = '';
+
+      state.tiers.forEach(tier => {
+        const row = renderTierRow(tier);
+        tierList.appendChild(row);
+
+        // Render items in this tier
+        const content = row.querySelector('.tier-content');
+        const tierItemIds = state.placements.tiers[tier.id] || [];
+        tierItemIds.forEach(itemId => {
+          const item = getItemById(itemId);
+          if (item) {
+            content.appendChild(createItemCard(item));
+          }
+        });
+      });
+    }
+
+    function renderPool() {
+      const pool = document.getElementById('itemPool');
+      pool.innerHTML = '';
+
+      // First render items explicitly in the pool
+      state.placements.pool.forEach(itemId => {
+        const item = getItemById(itemId);
+        if (item) {
+          pool.appendChild(createItemCard(item));
+        }
+      });
+
+      // Then render any items not placed anywhere
+      state.items.forEach(item => {
+        const inPool = state.placements.pool.includes(item.id);
+        const inTier = Object.values(state.placements.tiers).some(arr => arr.includes(item.id));
+        if (!inPool && !inTier) {
+          pool.appendChild(createItemCard(item));
+          state.placements.pool.push(item.id);
+        }
+      });
+
+      updatePoolCount();
+    }
+
+    function renderLegend() {
+      const legend = document.getElementById('legend');
+      const categories = state.categories || {};
+
+      // Only show categories that are actually used by items
+      const usedCategories = new Set(state.items.map(item => item.category).filter(Boolean));
+      const activeCategories = Object.entries(categories).filter(([key]) => usedCategories.has(key));
+
+      if (activeCategories.length === 0) {
+        legend.style.display = 'none';
+        return;
+      }
+
+      legend.style.display = 'flex';
+      legend.innerHTML = activeCategories.map(([key, cat]) => `
+        <div class="legend-item" data-category="${key}" onclick="editCategory('${key}')" title="Click to edit">
+          <div class="legend-color" style="background: ${cat.color}"></div>
+          ${cat.name}
+        </div>
+      `).join('');
+    }
+
+    function render() {
+      document.getElementById('tierListTitle').textContent = state.meta.name;
+      document.title = state.meta.name + ' - Tier List Maker';
+      renderTierList();
+      renderPool();
+      renderLegend();
+    }
+
+    function updatePoolCount() {
+      const pool = document.getElementById('itemPool');
+      const count = pool.children.length;
+      document.getElementById('poolCount').textContent = `${count} item${count !== 1 ? 's' : ''}`;
+    }
+
+    // ============================================
+    // DRAG AND DROP - ITEMS
+    // ============================================
+    function handleDragStart(e) {
+      draggedItem = e.target.closest('.item');
+      if (draggedItem) {
+        e.stopPropagation(); // Prevent tier row from capturing this drag
+        draggedItem.classList.add('dragging');
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/plain', draggedItem.dataset.id);
+      }
+    }
+
+    function handleDragEnd(e) {
+      e.stopPropagation(); // Prevent tier row from capturing this
+      if (draggedItem) {
+        draggedItem.classList.remove('dragging');
+        draggedItem = null;
+      }
+      document.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
+    }
+
+    function handleDragOver(e) {
+      if (!draggedItem) return;
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+    }
+
+    function handleDragEnter(e) {
+      if (!draggedItem) return;
+      e.preventDefault();
+      const dropZone = e.target.closest('.tier-content, .pool-elements');
+      if (dropZone) {
+        dropZone.classList.add('drag-over');
+      }
+    }
+
+    function handleDragLeave(e) {
+      const dropZone = e.target.closest('.tier-content, .pool-elements');
+      if (dropZone && !dropZone.contains(e.relatedTarget)) {
+        dropZone.classList.remove('drag-over');
+      }
+    }
+
+    function handleDrop(e) {
+      e.preventDefault();
+      const dropZone = e.target.closest('.tier-content, .pool-elements');
+      if (dropZone && draggedItem) {
+        dropZone.classList.remove('drag-over');
+
+        const itemId = draggedItem.dataset.id;
+
+        // Remove from old location in placements
+        state.placements.pool = state.placements.pool.filter(id => id !== itemId);
+        Object.keys(state.placements.tiers).forEach(tierId => {
+          state.placements.tiers[tierId] = state.placements.tiers[tierId].filter(id => id !== itemId);
+        });
+
+        // Add to new location
+        if (dropZone.classList.contains('pool-elements')) {
+          state.placements.pool.push(itemId);
+        } else {
+          const tierId = dropZone.dataset.tierId;
+          if (!state.placements.tiers[tierId]) {
+            state.placements.tiers[tierId] = [];
+          }
+          state.placements.tiers[tierId].push(itemId);
+        }
+
+        dropZone.appendChild(draggedItem);
+        updatePoolCount();
+        state.meta.modifiedAt = Date.now();
+      }
+    }
+
+    // ============================================
+    // DRAG AND DROP - TIERS
+    // ============================================
+    function handleTierDragStart(e, tierId) {
+      draggedTierRow = e.target.closest('.tier-row');
+      if (draggedTierRow) {
+        draggedTierRow.classList.add('dragging-tier');
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/plain', tierId);
+      }
+    }
+
+    function handleTierDragEnd(e) {
+      if (draggedTierRow) {
+        draggedTierRow.classList.remove('dragging-tier');
+        draggedTierRow.dataset.canDrag = 'false';
+        draggedTierRow = null;
+      }
+      document.querySelectorAll('.drag-over-tier').forEach(el => el.classList.remove('drag-over-tier'));
+    }
+
+    function handleTierDragOver(e) {
+      if (!draggedTierRow) return;
+      e.preventDefault();
+      const targetRow = e.target.closest('.tier-row');
+      if (targetRow && targetRow !== draggedTierRow) {
+        document.querySelectorAll('.drag-over-tier').forEach(el => el.classList.remove('drag-over-tier'));
+        targetRow.classList.add('drag-over-tier');
+      }
+    }
+
+    function handleTierDrop(e) {
+      e.preventDefault();
+      if (!draggedTierRow) return;
+
+      const targetRow = e.target.closest('.tier-row');
+      if (!targetRow || targetRow === draggedTierRow) return;
+
+      const draggedTierId = draggedTierRow.dataset.tierId;
+      const targetTierId = targetRow.dataset.tierId;
+
+      const draggedIndex = state.tiers.findIndex(t => t.id === draggedTierId);
+      const targetIndex = state.tiers.findIndex(t => t.id === targetTierId);
+
+      if (draggedIndex !== -1 && targetIndex !== -1) {
+        const [removed] = state.tiers.splice(draggedIndex, 1);
+        state.tiers.splice(targetIndex, 0, removed);
+        state.meta.modifiedAt = Date.now();
+        renderTierList();
+        renderPool();
+      }
+
+      document.querySelectorAll('.drag-over-tier').forEach(el => el.classList.remove('drag-over-tier'));
+    }
+
+    // ============================================
+    // TIER CRUD
+    // ============================================
+    function addTier() {
+      const colors = ['#ff2d55', '#ff6b35', '#ffcc00', '#34c759', '#00d4aa', '#5ac8fa', '#af52de', '#748ffc'];
+      const newTier = {
+        id: generateId(),
+        name: 'NEW',
+        color: colors[state.tiers.length % colors.length]
+      };
+      state.tiers.push(newTier);
+      state.placements.tiers[newTier.id] = [];
+      state.meta.modifiedAt = Date.now();
+      renderTierList();
+      showToast('Tier added');
+    }
+
+    function editTierName(tierId) {
+      const tier = getTierById(tierId);
+      if (!tier) return;
+
+      const row = document.querySelector(`.tier-row[data-tier-id="${tierId}"]`);
+      const labelDiv = row.querySelector('.tier-label');
+
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.className = 'tier-label-input';
+      input.value = tier.name;
+      input.style.color = tier.color;
+      input.maxLength = 10;
+
+      const finishEdit = () => {
+        const newName = input.value.trim() || 'TIER';
+        tier.name = newName;
+        state.meta.modifiedAt = Date.now();
+        labelDiv.textContent = newName;
+        labelDiv.style.display = '';
+        input.remove();
+      };
+
+      input.addEventListener('blur', finishEdit);
+      input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') finishEdit();
+        if (e.key === 'Escape') {
+          labelDiv.style.display = '';
+          input.remove();
+        }
+      });
+
+      labelDiv.style.display = 'none';
+      labelDiv.parentNode.insertBefore(input, labelDiv);
+      input.focus();
+      input.select();
+    }
+
+    function changeTierColor(tierId, color) {
+      const tier = getTierById(tierId);
+      if (!tier) return;
+
+      tier.color = color;
+      state.meta.modifiedAt = Date.now();
+
+      const row = document.querySelector(`.tier-row[data-tier-id="${tierId}"]`);
+      const label = row.querySelector('.tier-label');
+      label.style.color = color;
+      label.style.textShadow = `0 0 30px ${color}`;
+    }
+
+    function deleteTier(tierId) {
+      if (state.tiers.length <= 1) {
+        showToast('Cannot delete the last tier');
+        return;
+      }
+
+      showConfirm('Delete Tier', 'Move items to pool and delete this tier?', () => {
+        // Move items to pool
+        const tierItems = state.placements.tiers[tierId] || [];
+        state.placements.pool.push(...tierItems);
+        delete state.placements.tiers[tierId];
+
+        // Remove tier
+        state.tiers = state.tiers.filter(t => t.id !== tierId);
+        state.meta.modifiedAt = Date.now();
+
+        render();
+        showToast('Tier deleted');
+      });
+    }
+
+    // ============================================
+    // ITEM CRUD
+    // ============================================
+    const DEFAULT_CATEGORIES = [
+      { key: 'custom', name: 'Gray', color: '#a0a0a0' },
+      { key: 'alkali', name: 'Red', color: '#ff6b6b' },
+      { key: 'alkaline', name: 'Orange', color: '#ffa94d' },
+      { key: 'nonmetal', name: 'Yellow', color: '#ffd43b' },
+      { key: 'halogen', name: 'Teal', color: '#38d9a9' },
+      { key: 'noble', name: 'Blue', color: '#748ffc' },
+      { key: 'transition', name: 'Light Blue', color: '#74c0fc' },
+      { key: 'post-transition', name: 'Green', color: '#69db7c' },
+      { key: 'metalloid', name: 'Purple', color: '#da77f2' },
+      { key: 'lanthanide', name: 'Pink', color: '#f783ac' },
+      { key: 'actinide', name: 'Coral', color: '#ff8787' }
+    ];
+
+    function populateCategoryDropdown(selectedValue) {
+      const select = document.getElementById('itemCategory');
+      select.innerHTML = '';
+
+      // Build options: use custom name from state if available, otherwise default
+      DEFAULT_CATEGORIES.forEach(cat => {
+        const option = document.createElement('option');
+        option.value = cat.key;
+        // Use customized name from state if it exists, otherwise use default
+        const customized = state.categories[cat.key];
+        option.textContent = customized ? customized.name : cat.name;
+        select.appendChild(option);
+      });
+
+      // Set selected value
+      select.value = selectedValue || 'custom';
+    }
+
+    function openAddItemModal() {
+      editingItemId = null;
+      document.getElementById('itemModalTitle').textContent = 'Add New Item';
+      document.getElementById('itemModalSubmit').textContent = 'Add Item';
+      document.getElementById('addItemModal').classList.add('show');
+      document.getElementById('itemLabel').value = '';
+      document.getElementById('itemSublabel').value = '';
+      document.getElementById('itemName').value = '';
+      document.getElementById('imageItemName').value = '';
+      populateCategoryDropdown('custom');
+      uploadedImageData = null;
+      document.getElementById('imageUploadArea').innerHTML = `
+        <input type="file" id="imageInput" accept="image/*" onchange="handleImageUpload(event)">
+        <p>Click to upload an image</p>
+      `;
+      switchItemTab('text');
+    }
+
+    function editItem(itemId) {
+      const item = getItemById(itemId);
+      if (!item) return;
+
+      editingItemId = itemId;
+      document.getElementById('itemModalTitle').textContent = 'Edit Item';
+      document.getElementById('itemModalSubmit').textContent = 'Save Changes';
+      document.getElementById('addItemModal').classList.add('show');
+
+      // Set category
+      populateCategoryDropdown(item.category || 'custom');
+
+      if (item.type === 'image') {
+        switchItemTab('image');
+        uploadedImageData = item.imageData;
+        document.getElementById('imageItemName').value = item.name || '';
+        const area = document.getElementById('imageUploadArea');
+        area.classList.add('has-image');
+        area.innerHTML = `
+          <input type="file" id="imageInput" accept="image/*" onchange="handleImageUpload(event)">
+          <img src="${item.imageData}" alt="Preview">
+          <p style="margin-top: 0.5rem;">Click to change</p>
+        `;
+      } else {
+        switchItemTab('text');
+        document.getElementById('itemLabel').value = item.label || '';
+        document.getElementById('itemSublabel').value = item.sublabel || '';
+        document.getElementById('itemName').value = item.name || '';
+        uploadedImageData = null;
+        document.getElementById('imageUploadArea').innerHTML = `
+          <input type="file" id="imageInput" accept="image/*" onchange="handleImageUpload(event)">
+          <p>Click to upload an image</p>
+        `;
+        document.getElementById('imageItemName').value = '';
+      }
+    }
+
+    function closeAddItemModal() {
+      document.getElementById('addItemModal').classList.remove('show');
+      editingItemId = null;
+    }
+
+    function switchItemTab(tab) {
+      currentItemTab = tab;
+      document.querySelectorAll('.modal-tab').forEach(t => t.classList.remove('active'));
+      document.querySelector(`.modal-tab[data-tab="${tab}"]`).classList.add('active');
+      document.getElementById('textItemForm').style.display = tab === 'text' ? 'block' : 'none';
+      document.getElementById('imageItemForm').style.display = tab === 'image' ? 'block' : 'none';
+    }
+
+    function handleImageUpload(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      if (file.size > 500 * 1024) {
+        showToast('Image is large (>500KB). Consider using a smaller image.');
+      }
+
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        uploadedImageData = event.target.result;
+        const area = document.getElementById('imageUploadArea');
+        area.classList.add('has-image');
+        area.innerHTML = `
+          <input type="file" id="imageInput" accept="image/*" onchange="handleImageUpload(event)">
+          <img src="${uploadedImageData}" alt="Preview">
+          <p style="margin-top: 0.5rem;">Click to change</p>
+        `;
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function saveItem() {
+      const category = document.getElementById('itemCategory').value;
+      const isEditing = editingItemId !== null;
+
+      let itemData;
+      if (currentItemTab === 'text') {
+        const label = document.getElementById('itemLabel').value.trim();
+        if (!label) {
+          showToast('Label is required');
+          return;
+        }
+        itemData = {
+          type: 'text',
+          label: label,
+          sublabel: document.getElementById('itemSublabel').value.trim() || null,
+          name: document.getElementById('itemName').value.trim() || null,
+          category: category
+        };
+      } else {
+        if (!uploadedImageData) {
+          showToast('Please upload an image');
+          return;
+        }
+        itemData = {
+          type: 'image',
+          imageData: uploadedImageData,
+          name: document.getElementById('imageItemName').value.trim() || null,
+          category: category
+        };
+      }
+
+      if (isEditing) {
+        // Update existing item
+        const existingItem = getItemById(editingItemId);
+        if (existingItem) {
+          Object.assign(existingItem, itemData);
+        }
+        showToast('Item updated');
+      } else {
+        // Add new item
+        itemData.id = generateId();
+        state.items.push(itemData);
+        state.placements.pool.push(itemData.id);
+        showToast('Item added');
+      }
+
+      // Add category if not exists
+      if (!state.categories[category]) {
+        const defaultNames = {
+          custom: 'Custom', alkali: 'Red', alkaline: 'Orange', nonmetal: 'Yellow',
+          halogen: 'Teal', noble: 'Blue', transition: 'Light Blue',
+          'post-transition': 'Green', metalloid: 'Purple', lanthanide: 'Pink', actinide: 'Coral'
+        };
+        const color = getComputedStyle(document.documentElement).getPropertyValue(`--${category}`).trim() || '#a0a0a0';
+        state.categories[category] = { name: defaultNames[category] || category, color: color };
+      }
+
+      state.meta.modifiedAt = Date.now();
+      closeAddItemModal();
+      render();
+    }
+
+    function deleteItem(itemId, event) {
+      event.stopPropagation();
+      event.preventDefault();
+
+      showConfirm('Delete Item', 'Are you sure you want to delete this item?', () => {
+        // Remove from items array
+        state.items = state.items.filter(item => item.id !== itemId);
+
+        // Remove from placements
+        state.placements.pool = state.placements.pool.filter(id => id !== itemId);
+        Object.keys(state.placements.tiers).forEach(tierId => {
+          state.placements.tiers[tierId] = state.placements.tiers[tierId].filter(id => id !== itemId);
+        });
+
+        state.meta.modifiedAt = Date.now();
+        render();
+        showToast('Item deleted');
+      });
+    }
+
+    // ============================================
+    // TITLE EDITING
+    // ============================================
+    function editTitle() {
+      const titleEl = document.getElementById('tierListTitle');
+      const currentTitle = state.meta.name;
+
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.className = 'title-input';
+      input.value = currentTitle;
+      input.maxLength = 50;
+
+      const finishEdit = () => {
+        const newTitle = input.value.trim() || 'My Tier List';
+        state.meta.name = newTitle;
+        state.meta.modifiedAt = Date.now();
+        titleEl.textContent = newTitle;
+        document.title = newTitle + ' - Tier List Maker';
+        titleEl.style.display = '';
+        input.remove();
+      };
+
+      input.addEventListener('blur', finishEdit);
+      input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') finishEdit();
+        if (e.key === 'Escape') {
+          titleEl.style.display = '';
+          input.remove();
+        }
+      });
+
+      titleEl.style.display = 'none';
+      titleEl.parentNode.insertBefore(input, titleEl);
+      input.focus();
+      input.select();
+    }
+
+    // ============================================
+    // PRESETS AND STATE MANAGEMENT
+    // ============================================
+    function loadPreset(presetName) {
+      if (!presetName) return;
+      document.getElementById('presetSelect').value = '';
+
+      const preset = PRESETS[presetName];
+      if (!preset) {
+        showToast('Preset not found');
+        return;
+      }
+
+      const hasContent = state.items.length > 0 || Object.values(state.placements.tiers).some(arr => arr.length > 0);
+
+      if (hasContent) {
+        showConfirm('Load Preset', 'This will replace your current tier list. Continue?', () => {
+          applyPreset(preset, presetName);
+        });
+      } else {
+        applyPreset(preset, presetName);
+      }
+    }
+
+    function applyPreset(preset, presetName) {
+      state = {
+        meta: {
+          id: generateId(),
+          name: preset.meta.name,
+          createdAt: Date.now(),
+          modifiedAt: Date.now()
+        },
+        tiers: JSON.parse(JSON.stringify(preset.tiers)),
+        items: JSON.parse(JSON.stringify(preset.items)),
+        placements: {
+          pool: preset.items.map(item => item.id),
+          tiers: {}
+        },
+        categories: JSON.parse(JSON.stringify(preset.categories || {}))
+      };
+
+      // Initialize tier placements
+      state.tiers.forEach(tier => {
+        state.placements.tiers[tier.id] = [];
+      });
+
+      render();
+      showToast(`Loaded: ${preset.meta.name}`);
+    }
+
+    function newTierList() {
+      const hasContent = state.items.length > 0 || Object.values(state.placements.tiers).some(arr => arr.length > 0);
+
+      if (hasContent) {
+        showConfirm('New Tier List', 'This will clear your current tier list. Continue?', () => {
+          applyPreset(PRESETS['blank'], 'blank');
+        });
+      } else {
+        applyPreset(PRESETS['blank'], 'blank');
+      }
+    }
+
+    function resetTierList() {
+      showConfirm('Reset', 'Move all items back to the pool?', () => {
+        // Move all tier items to pool
+        Object.keys(state.placements.tiers).forEach(tierId => {
+          state.placements.pool.push(...state.placements.tiers[tierId]);
+          state.placements.tiers[tierId] = [];
+        });
+        state.meta.modifiedAt = Date.now();
+        render();
+        showToast('Tier list reset');
+      });
+    }
+
+    // ============================================
+    // SAVE/LOAD
+    // ============================================
+    function saveTierList() {
+      // Ensure placements reflect current DOM state
+      syncPlacementsFromDOM();
+
+      state.meta.modifiedAt = Date.now();
+      localStorage.setItem('tierListState', JSON.stringify(state));
+      showToast('Saved to browser');
+    }
+
+    function syncPlacementsFromDOM() {
+      // Sync pool
+      const pool = document.getElementById('itemPool');
+      state.placements.pool = Array.from(pool.children).map(el => el.dataset.id).filter(Boolean);
+
+      // Sync tiers
+      state.tiers.forEach(tier => {
+        const content = document.querySelector(`.tier-content[data-tier-id="${tier.id}"]`);
+        if (content) {
+          state.placements.tiers[tier.id] = Array.from(content.children).map(el => el.dataset.id).filter(Boolean);
+        }
+      });
+    }
+
+    function loadTierList() {
+      // Try new format first
+      let saved = localStorage.getItem('tierListState');
+      if (saved) {
+        try {
+          state = JSON.parse(saved);
+          render();
+          showToast('Loaded from browser');
+          return;
+        } catch (e) {
+          console.error('Failed to load saved state:', e);
+        }
+      }
+
+      // Try to migrate old format
+      const oldSaved = localStorage.getItem('elementTierList');
+      if (oldSaved) {
+        try {
+          migrateOldFormat(JSON.parse(oldSaved));
+          showToast('Migrated old ranking');
+          return;
+        } catch (e) {
+          console.error('Failed to migrate old format:', e);
+        }
+      }
+
+      showToast('No saved data found');
+    }
+
+    function migrateOldFormat(oldData) {
+      // Load periodic elements preset first
+      applyPreset(PRESETS['periodic-elements'], 'periodic-elements');
+
+      // Map old element numbers to new item IDs
+      const numberToId = {};
+      state.items.forEach(item => {
+        if (item.sublabel) {
+          numberToId[parseInt(item.sublabel)] = item.id;
+        }
+      });
+
+      // Clear current placements
+      state.placements.pool = [];
+      state.tiers.forEach(tier => {
+        state.placements.tiers[tier.id] = [];
+      });
+
+      // Map old tier names to new tier IDs
+      const oldTierToNew = {
+        'S++': 'splus',
+        'S': 's',
+        'A': 'a',
+        'B': 'b',
+        'C': 'c',
+        'D': 'd',
+        'F': 'f'
+      };
+
+      // Place items according to old data
+      if (oldData.tiers) {
+        Object.entries(oldData.tiers).forEach(([oldTierName, numbers]) => {
+          const newTierId = oldTierToNew[oldTierName];
+          if (newTierId && state.placements.tiers[newTierId]) {
+            numbers.forEach(num => {
+              const itemId = numberToId[num];
+              if (itemId) {
+                state.placements.tiers[newTierId].push(itemId);
+              }
+            });
+          }
+        });
+      }
+
+      // Remaining items go to pool
+      if (oldData.pool) {
+        oldData.pool.forEach(num => {
+          const itemId = numberToId[num];
+          if (itemId) {
+            state.placements.pool.push(itemId);
+          }
+        });
+      }
+
+      // Also add any items not yet placed
+      state.items.forEach(item => {
+        const inPool = state.placements.pool.includes(item.id);
+        const inTier = Object.values(state.placements.tiers).some(arr => arr.includes(item.id));
+        if (!inPool && !inTier) {
+          state.placements.pool.push(item.id);
+        }
+      });
+
+      state.meta.modifiedAt = Date.now();
+      render();
+    }
+
+    // ============================================
+    // EXPORT
+    // ============================================
+    async function exportAsPNG() {
+      const exportBtn = document.querySelector('.btn--export');
+      const originalText = exportBtn.textContent;
+      exportBtn.textContent = 'Exporting...';
+      exportBtn.disabled = true;
+
+      try {
+        const tierList = document.getElementById('tierList');
+
+        // Create temporary export container
+        const exportContainer = document.createElement('div');
+        exportContainer.style.cssText = `
+          position: absolute;
+          left: -9999px;
+          background: #0a0a0f;
+          padding: 30px;
+          width: ${tierList.offsetWidth + 60}px;
+        `;
+
+        // Add title
+        const title = document.createElement('div');
+        title.style.cssText = `
+          font-family: 'Orbitron', sans-serif;
+          font-size: 28px;
+          font-weight: 900;
+          letter-spacing: 0.1em;
+          text-align: center;
+          margin-bottom: 20px;
+          background: linear-gradient(135deg, #ff2d55, #ff6b35, #ffcc00, #34c759, #5ac8fa);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
+        `;
+        title.textContent = state.meta.name.toUpperCase();
+        exportContainer.appendChild(title);
+
+        // Clone the tier list
+        const tierListClone = tierList.cloneNode(true);
+        tierListClone.style.position = 'relative';
+        tierListClone.style.left = '0';
+
+        // Remove controls from clone
+        tierListClone.querySelectorAll('.tier-drag-handle, .tier-controls, .item-delete').forEach(el => el.remove());
+
+        exportContainer.appendChild(tierListClone);
+
+        // Add watermark
+        const watermark = document.createElement('div');
+        watermark.style.cssText = `
+          font-family: 'JetBrains Mono', monospace;
+          font-size: 11px;
+          color: #555;
+          text-align: center;
+          margin-top: 15px;
+          letter-spacing: 0.1em;
+        `;
+        watermark.textContent = 'Created with Tier List Maker';
+        exportContainer.appendChild(watermark);
+
+        document.body.appendChild(exportContainer);
+
+        // Use html2canvas to capture
+        const canvas = await html2canvas(exportContainer, {
+          backgroundColor: '#0a0a0f',
+          scale: 2,
+          useCORS: true,
+          logging: false
+        });
+
+        // Clean up
+        document.body.removeChild(exportContainer);
+
+        // Download the image
+        const link = document.createElement('a');
+        const filename = state.meta.name.toLowerCase().replace(/[^a-z0-9]+/g, '-') + '-tier-list.png';
+        link.download = filename;
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+
+        showToast('PNG exported successfully');
+      } catch (error) {
+        console.error('Export failed:', error);
+        showToast('Export failed - try again');
+      } finally {
+        exportBtn.textContent = originalText;
+        exportBtn.disabled = false;
+      }
+    }
+
+    // ============================================
+    // MODALS AND TOASTS
+    // ============================================
+    function showToast(message) {
+      const toast = document.getElementById('toast');
+      toast.textContent = message;
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 2500);
+    }
+
+    function showConfirm(title, message, onConfirm) {
+      document.getElementById('confirmTitle').textContent = title;
+      document.getElementById('confirmMessage').textContent = message;
+      pendingConfirmAction = onConfirm;
+      document.getElementById('confirmModal').classList.add('show');
+    }
+
+    function closeConfirmModal() {
+      document.getElementById('confirmModal').classList.remove('show');
+      pendingConfirmAction = null;
+    }
+
+    function confirmAction() {
+      if (pendingConfirmAction) {
+        pendingConfirmAction();
+      }
+      closeConfirmModal();
+    }
+
+    // Category editing
+    let editingCategoryKey = null;
+
+    function editCategory(categoryKey) {
+      const category = state.categories[categoryKey];
+      if (!category) return;
+
+      editingCategoryKey = categoryKey;
+      document.getElementById('categoryName').value = category.name;
+      document.getElementById('categoryColor').value = category.color;
+      document.getElementById('categoryColorHex').textContent = category.color;
+      document.getElementById('editCategoryModal').classList.add('show');
+
+      // Update hex display when color changes
+      document.getElementById('categoryColor').oninput = (e) => {
+        document.getElementById('categoryColorHex').textContent = e.target.value;
+      };
+    }
+
+    function closeCategoryModal() {
+      document.getElementById('editCategoryModal').classList.remove('show');
+      editingCategoryKey = null;
+    }
+
+    function saveCategory() {
+      if (!editingCategoryKey) return;
+
+      const newName = document.getElementById('categoryName').value.trim();
+      const newColor = document.getElementById('categoryColor').value;
+
+      if (!newName) {
+        showToast('Category name is required');
+        return;
+      }
+
+      state.categories[editingCategoryKey] = {
+        name: newName,
+        color: newColor
+      };
+
+      // Update CSS variable for this category if it's a custom one
+      document.documentElement.style.setProperty(`--${editingCategoryKey}`, newColor);
+
+      state.meta.modifiedAt = Date.now();
+      closeCategoryModal();
+      render();
+      showToast('Category updated');
+    }
+
+    // ============================================
+    // INITIALIZATION
+    // ============================================
+    function init() {
+      const pool = document.getElementById('itemPool');
+      pool.addEventListener('dragover', handleDragOver);
+      pool.addEventListener('dragenter', handleDragEnter);
+      pool.addEventListener('dragleave', handleDragLeave);
+      pool.addEventListener('drop', handleDrop);
+
+      // Try to auto-load saved state
+      const saved = localStorage.getItem('tierListState');
+      if (saved) {
+        try {
+          state = JSON.parse(saved);
+          render();
+          return;
+        } catch (e) {
+          console.error('Failed to auto-load:', e);
+        }
+      }
+
+      // Check for old format to migrate
+      const oldSaved = localStorage.getItem('elementTierList');
+      if (oldSaved) {
+        try {
+          migrateOldFormat(JSON.parse(oldSaved));
+          return;
+        } catch (e) {
+          console.error('Failed to migrate:', e);
+        }
+      }
+
+      // Start with blank template
+      render();
+    }
+
+    // Close modals on outside click
+    document.addEventListener('click', (e) => {
+      if (e.target.classList.contains('modal-overlay')) {
+        e.target.classList.remove('show');
+      }
+    });
+
+    // Close modals on Escape key
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        document.querySelectorAll('.modal-overlay.show').forEach(modal => {
+          modal.classList.remove('show');
+        });
+      }
+    });
+
+    // Initialize on load
+    document.addEventListener('DOMContentLoaded', init);
+  </script>
+</body>
+</html>
